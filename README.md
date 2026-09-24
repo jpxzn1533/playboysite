@@ -168,28 +168,75 @@ Toda alteração feita no admin (preço, estoque, ativar/desativar) reflete imed
 
 ## Deploy na Vercel (produção)
 
-SQLite não funciona bem em ambientes serverless (o disco é efêmero). Para produção use **Postgres**:
+O projeto já usa **PostgreSQL** e cria as tabelas + categorias automaticamente no
+deploy. Você não precisa rodar nenhum comando de banco à mão.
 
-1. Crie um banco Postgres (Neon, Supabase ou Vercel Postgres).
-2. Em `prisma/schema.prisma`, troque o `datasource`:
-   ```prisma
-   datasource db {
-     provider = "postgresql"
-     url      = env("DATABASE_URL")
-   }
-   ```
-3. Na Vercel, defina as variáveis de ambiente:
-   - `DATABASE_URL` → string de conexão do Postgres
-   - `AUTH_SECRET` → um segredo forte e aleatório
-   - `NEXT_PUBLIC_DISCORD_INVITE` → o convite do seu Discord
-4. Rode as migrações uma vez: `npx prisma db push` (e opcionalmente `npm run db:seed`).
-5. O `build` já executa `prisma generate` automaticamente.
+### 1) Crie um banco Postgres (grátis)
 
-> Os campos de "enum" usam `String` no schema para serem compatíveis com SQLite e Postgres.
-> Ao migrar para Postgres você pode, se quiser, convertê-los em enums nativos.
+Recomendado: **Neon** — https://neon.tech → New Project. Copie a connection string.
+Use a conexão **direta** (a que NÃO tem `-pooler` no host), algo como:
+
+```
+postgresql://user:senha@ep-xxxx.us-east-2.aws.neon.tech/neondb?sslmode=require
+```
+
+> Também funciona com Supabase ou Vercel Postgres — basta pegar a string de conexão.
+
+### 2) Suba o código para o GitHub
+
+O repositório já está inicializado e com o primeiro commit. Crie um repositório
+vazio no GitHub e rode (troque pela URL do seu repo):
+
+```bash
+git remote add origin https://github.com/SEU_USUARIO/playboy-store.git
+git push -u origin main
+```
+
+### 3) Importe na Vercel
+
+1. https://vercel.com → **Add New → Project** → importe o repositório do GitHub.
+2. Framework: **Next.js** (detectado automaticamente). Não mude o build command.
+3. Em **Environment Variables**, adicione:
+
+   | Variável | Valor |
+   | --- | --- |
+   | `DATABASE_URL` | a connection string do Postgres (passo 1) |
+   | `AUTH_SECRET` | um segredo forte e aleatório (gere um novo!) |
+   | `NEXT_PUBLIC_DISCORD_INVITE` | `https://discord.gg/playboystore` |
+   | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | (se usar login Google) |
+   | `DISCORD_CLIENT_ID` / `DISCORD_CLIENT_SECRET` | (se usar login Discord) |
+
+4. Clique em **Deploy**. No build, o projeto cria as tabelas e as 6 categorias.
+
+### 4) Vire administrador
+
+O banco de produção começa vazio. **A primeira conta criada vira ADMIN
+automaticamente.** Então, no site publicado:
+
+1. Acesse `/conta` e **crie sua conta** (ou entre com Google/Discord).
+2. Pronto — essa primeira conta já é administradora. Acesse `/admin`.
+
+> Para promover outras contas depois, use `npm run make-admin -- email` apontando
+> o `DATABASE_URL` para o banco de produção.
+
+### 5) Atualize os redirects do OAuth (se usar login social)
+
+Nos painéis do Google/Discord, adicione as URLs de callback com o **seu domínio**:
+
+```
+https://SEU-DOMINIO.vercel.app/api/auth/oauth/google/callback
+https://SEU-DOMINIO.vercel.app/api/auth/oauth/discord/callback
+```
+
+### Rodando localmente (opcional)
+
+Como o projeto agora usa Postgres, para desenvolver na sua máquina preencha
+`DATABASE_URL` no `.env` com um Postgres (pode ser o mesmo do Neon ou um banco de
+dev separado) e rode `npm run dev`. Para popular categorias localmente:
+`npm run db:fresh`.
 
 ## Notas
 
-- As imagens de exemplo vêm de `picsum.photos`. Troque pelas imagens reais dos seus produtos
-  no painel (URLs por linha no formulário do produto).
-- Troque `AUTH_SECRET` no `.env` antes de publicar.
+- Cadastre as imagens reais dos seus produtos no painel (URLs por linha no
+  formulário do produto).
+- **Gere um `AUTH_SECRET` novo e forte** para produção (não reutilize o de dev).
