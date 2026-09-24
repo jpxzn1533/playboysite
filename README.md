@@ -166,6 +166,41 @@ Toda alteração feita no admin (preço, estoque, ativar/desativar) reflete imed
 
 ---
 
+## Pagamento via PIX (IronPay)
+
+O checkout mostra o botão **"Pagar com PIX"** automaticamente quando as variáveis
+da IronPay estão configuradas. Sem elas, o checkout segue no modo manual (combinar
+no Discord).
+
+Como funciona:
+1. Cliente escolhe PIX no checkout e informa nome, e-mail, CPF e telefone.
+2. O site gera a cobrança na IronPay e mostra **QR Code + copia-e-cola**.
+3. Quando o cliente paga, a IronPay chama nosso **webhook** e o pedido é
+   confirmado automaticamente.
+4. Se todos os itens forem **entregáveis** (e nenhum for de chat), a entrega é
+   liberada na hora. Caso contrário, o pedido fica **Pago** e a equipe conclui
+   (chat/manual).
+
+Configuração (variáveis de ambiente — no `.env` e na Vercel):
+
+```
+IRONPAY_API_TOKEN=...      # painel IronPay → configurações de API
+IRONPAY_OFFER_HASH=...     # hash da OFERTA (crie 1 produto + oferta na IronPay)
+IRONPAY_PRODUCT_HASH=...   # hash do PRODUTO
+IRONPAY_WEBHOOK_TOKEN=...  # opcional: valida o campo "token" do postback
+```
+
+No painel da IronPay, cadastre a **URL de postback/webhook**:
+
+```
+https://SEU-DOMINIO.vercel.app/api/webhooks/ironpay
+```
+
+> A cobrança usa um único item (o total do pedido) referenciando a oferta/produto
+> configurados. O valor é dinâmico (o total real do carrinho).
+
+---
+
 ## Deploy na Vercel (produção)
 
 O projeto já usa **PostgreSQL** e cria as tabelas + categorias automaticamente no

@@ -6,6 +6,7 @@ import { requireAdmin } from "@/lib/auth";
 import { logAdminAction, generateOrderCode } from "@/lib/log";
 import { slugify } from "@/lib/format";
 import { syncStock, consumeDeliverables, isManaged } from "@/lib/stock";
+import { fulfillOrder } from "@/lib/fulfill";
 
 type ActionResult = { ok: boolean; error?: string; id?: string; code?: string };
 
@@ -802,86 +803,6 @@ export async function abandonCart(cartId: string): Promise<ActionResult> {
 /* Orders / sales                                                      */
 /* ------------------------------------------------------------------ */
 
-async function fulfillOrder(orderId: string, adminId: string, adminName: string) {
-  const order = await prisma.order.findUnique({
-    where: { id: orderId },
-    include: { items: { include: { product: true, variant: true } }, delivery: true },
-  });
-  if (!order) throw new Error("Pedido não encontrado.");
-  if (order.status === "DELIVERED") return order;
-
-  await prisma.$transaction(async (tx) => {
-    for (const i of order.items) {
-      const variantId = i.variantId ?? null;
-      const productId = i.productId ?? i.product?.id ?? null;
-
-      let contents: string[] = [];
-      let managed = false;
-      if (productId) {
-        contents = await consumeDeliverables(tx, {
-          productId,
-          variantId,
-          quantity: i.quantity,
-          orderId,
-        });
-        managed = contents.length > 0 || (await isManaged(tx, productId, variantId));
-        if (contents.length > 0) {
-          await tx.orderItem.update({
-            where: { id: i.id },
-            data: { deliveredContent: contents.join("\n") },
-          });
-        }
-      }
-
-      if (i.variant) {
-        await tx.productVariant.update({
-          where: { id: i.variant.id },
-          data: {
-            reserved: Math.max(0, i.variant.reserved - i.quantity),
-            soldCount: { increment: i.quantity },
-            ...(managed ? {} : { stock: Math.max(0, i.variant.stock - i.quantity) }),
-          },
-        });
-        if (i.product) {
-          await tx.product.update({
-            where: { id: i.product.id },
-            data: { soldCount: { increment: i.quantity } },
-          });
-        }
-      } else if (i.product) {
-        await tx.product.update({
-          where: { id: i.product.id },
-          data: {
-            reserved: Math.max(0, i.product.reserved - i.quantity),
-            soldCount: { increment: i.quantity },
-            ...(managed ? {} : { stock: Math.max(0, i.product.stock - i.quantity) }),
-          },
-        });
-      }
-    }
-    await tx.order.update({
-      where: { id: orderId },
-      data: { status: "DELIVERED" },
-    });
-    if (!order.delivery) {
-      await tx.delivery.create({
-        data: {
-          orderId,
-          adminId,
-          manual: false,
-          snapshot: JSON.stringify(
-            order.items.map((i) => ({
-              name: i.variantName ? `${i.name} — ${i.variantName}` : i.name,
-              quantity: i.quantity,
-            }))
-          ),
-        },
-      });
-    }
-  });
-  return order;
-}
-
 export async function updateOrderStatus(
   orderId: string,
   status: string
@@ -900,7 +821,7 @@ export async function updateOrderStatus(
   if (!order) return { ok: false, error: "Pedido não encontrado." };
 
   if (status === "DELIVERED") {
-    await fulfillOrder(orderId, admin.userId, admin.name);
+    await fulfillOrder(orderId, admin.userId, false);
   } else if (status === "CANCELLED") {
     await prisma.$transaction(async (tx) => {
       // Release reserved stock if it was reserving.

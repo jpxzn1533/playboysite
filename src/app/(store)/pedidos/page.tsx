@@ -121,14 +121,26 @@ export default async function OrdersPage() {
                   </p>
                 )}
 
-                {order.conversation && (
-                  <Link
-                    href={`/pedidos/atendimento/${order.conversation.id}`}
-                    className="mt-4 inline-flex items-center gap-2 rounded-xl border border-white/10 bg-ink-800 px-4 py-2.5 text-sm text-white transition-colors hover:border-white/20 hover:bg-ink-750"
-                  >
-                    💬 {order.conversation.status === "OPEN" ? "Abrir atendimento" : "Ver atendimento"}
-                  </Link>
-                )}
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {order.status === "AWAITING_PAYMENT" &&
+                    order.paymentMethod === "pix" &&
+                    order.pixCode && (
+                      <Link
+                        href={`/checkout/pix/${order.id}`}
+                        className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-medium text-ink-950 transition-colors hover:bg-ink-100"
+                      >
+                        Pagar agora (PIX)
+                      </Link>
+                    )}
+                  {order.conversation && (
+                    <Link
+                      href={`/pedidos/atendimento/${order.conversation.id}`}
+                      className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-ink-800 px-4 py-2.5 text-sm text-white transition-colors hover:border-white/20 hover:bg-ink-750"
+                    >
+                      💬 {order.conversation.status === "OPEN" ? "Abrir atendimento" : "Ver atendimento"}
+                    </Link>
+                  )}
+                </div>
               </div>
             </Reveal>
           ))}

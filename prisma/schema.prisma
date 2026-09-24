@@ -151,6 +151,10 @@ model Order {
   deliveryMethod String      @default("Discord")
   deliveryInfo   String      @default("")
   note           String      @default("")
+  paymentMethod  String      @default("manual") // manual | pix
+  paymentHash    String?     // id da transação no gateway (IronPay)
+  pixCode        String?     // PIX copia-e-cola
+  paidAt         DateTime?
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt
 

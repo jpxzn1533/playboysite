@@ -89,7 +89,22 @@ export default async function SaleDetailPage({
             </h3>
             <dl className="grid grid-cols-2 gap-4 text-sm">
               <div>
-                <dt className="text-ink-400">Método</dt>
+                <dt className="text-ink-400">Pagamento</dt>
+                <dd className="mt-0.5 text-white">
+                  {order.paymentMethod === "pix" ? "PIX" : "Manual"}
+                  {order.paidAt ? (
+                    <span className="ml-1.5 text-xs text-emerald-300">
+                      · pago em {formatDateTime(order.paidAt)}
+                    </span>
+                  ) : (
+                    <span className="ml-1.5 text-xs text-amber-300">
+                      · não confirmado
+                    </span>
+                  )}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-ink-400">Método de entrega</dt>
                 <dd className="mt-0.5 text-white">{order.deliveryMethod}</dd>
               </div>
               <div>
