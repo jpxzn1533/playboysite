@@ -1,0 +1,183 @@
+// PlayBoy Store — database schema
+// Local dev uses SQLite. For production on Vercel, change provider to "postgresql"
+// and point DATABASE_URL at your Postgres instance (e.g. Neon, Supabase, Vercel Postgres).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// NOTE: SQLite does not support native enums. These fields use String with a
+// fixed set of values, validated in application code:
+//   Role:        CUSTOMER | ADMIN
+//   CartStatus:  OPEN | CONVERTED | ABANDONED
+//   OrderStatus: CART_OPEN | AWAITING_PAYMENT | PAID | PREPARING | DELIVERED | CANCELLED
+
+model User {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  passwordHash String?  // null for accounts created via OAuth (Google/Discord)
+  role         String   @default("CUSTOMER")
+  provider     String   @default("credentials") // credentials | google | discord
+  providerId   String?  // id returned by the OAuth provider
+  avatarUrl    String?
+  discordName  String?
+  discordId    String?
+  createdAt    DateTime @default(now())
+
+  carts      Cart[]
+  orders     Order[]
+  deliveries Delivery[] @relation("AdminDeliveries")
+  logs       AdminLog[]
+}
+
+model Category {
+  id        String    @id @default(cuid())
+  name      String    @unique
+  slug      String    @unique
+  createdAt DateTime  @default(now())
+  products  Product[]
+}
+
+model Product {
+  id               String   @id @default(cuid())
+  name             String
+  slug             String   @unique
+  shortDescription String   @default("")
+  description      String   @default("")
+  price            Float
+  promoPrice       Float?
+  stock            Int      @default(0)
+  reserved         Int      @default(0)
+  soldCount        Int      @default(0)
+  active           Boolean  @default(true)
+  featured         Boolean  @default(false)
+  bestSeller       Boolean  @default(false)
+  lowStockThreshold Int     @default(5)
+  categoryId       String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  category   Category?        @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  images     ProductImage[]
+  variants   ProductVariant[]
+  cartItems  CartItem[]
+  orderItems OrderItem[]
+}
+
+model ProductVariant {
+  id         String   @id @default(cuid())
+  productId  String
+  name       String
+  price      Float
+  promoPrice Float?
+  stock      Int      @default(0)
+  reserved   Int      @default(0)
+  soldCount  Int      @default(0)
+  active     Boolean  @default(true)
+  position   Int      @default(0)
+  createdAt  DateTime @default(now())
+
+  product    Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
+  cartItems  CartItem[]
+  orderItems OrderItem[]
+}
+
+model ProductImage {
+  id        String  @id @default(cuid())
+  productId String
+  url       String
+  position  Int     @default(0)
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+}
+
+model Cart {
+  id        String     @id @default(cuid())
+  token     String   @unique // anonymous session token stored in a cookie
+  userId    String?
+  status    String   @default("OPEN")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user  User?      @relation(fields: [userId], references: [id], onDelete: SetNull)
+  items CartItem[]
+  order Order?
+}
+
+model CartItem {
+  id        String  @id @default(cuid())
+  cartId    String
+  productId String
+  variantId String?
+  quantity  Int     @default(1)
+  unitPrice Float
+
+  cart    Cart            @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  product Product         @relation(fields: [productId], references: [id], onDelete: Cascade)
+  variant ProductVariant? @relation(fields: [variantId], references: [id], onDelete: Cascade)
+}
+
+model Order {
+  id             String      @id @default(cuid())
+  code           String      @unique
+  userId         String?
+  cartId         String?  @unique
+  status         String   @default("AWAITING_PAYMENT")
+  total          Float
+  deliveryMethod String      @default("Discord")
+  deliveryInfo   String      @default("")
+  note           String      @default("")
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  user     User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
+  cart     Cart?       @relation(fields: [cartId], references: [id], onDelete: SetNull)
+  items    OrderItem[]
+  delivery Delivery?
+}
+
+model OrderItem {
+  id          String  @id @default(cuid())
+  orderId     String
+  productId   String?
+  variantId   String?
+  name        String
+  variantName String  @default("")
+  quantity    Int
+  unitPrice   Float
+
+  order   Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product Product?        @relation(fields: [productId], references: [id], onDelete: SetNull)
+  variant ProductVariant? @relation(fields: [variantId], references: [id], onDelete: SetNull)
+}
+
+model Delivery {
+  id          String   @id @default(cuid())
+  orderId     String   @unique
+  adminId     String?
+  deliveredAt DateTime @default(now())
+  note        String   @default("")
+  manual      Boolean  @default(false)
+  snapshot    String   @default("") // JSON snapshot of delivered products
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  admin User? @relation("AdminDeliveries", fields: [adminId], references: [id], onDelete: SetNull)
+}
+
+model AdminLog {
+  id         String   @id @default(cuid())
+  adminId    String?
+  adminName  String   @default("Sistema")
+  action     String
+  entityType String   @default("")
+  entityId   String   @default("")
+  detail     String   @default("")
+  createdAt  DateTime @default(now())
+
+  admin User? @relation(fields: [adminId], references: [id], onDelete: SetNull)
+}
