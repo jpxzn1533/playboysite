@@ -14,18 +14,19 @@ export default async function AdminLayout({
   if (!user) redirect("/conta?next=/admin");
   if (user.role !== "ADMIN") redirect("/");
 
-  const [openCarts, pendingOrders] = await Promise.all([
+  const [openCarts, pendingOrders, openChats] = await Promise.all([
     prisma.cart.count({ where: { status: "OPEN" } }),
     prisma.order.count({
       where: { status: { in: ["AWAITING_PAYMENT", "PAID", "PREPARING"] } },
     }),
+    prisma.conversation.count({ where: { status: "OPEN" } }),
   ]);
 
   return (
     <div className="min-h-screen lg:grid lg:grid-cols-[260px_1fr]">
       <AdminSidebar
         adminName={user.name}
-        badges={{ carts: openCarts, orders: pendingOrders }}
+        badges={{ carts: openCarts, orders: pendingOrders, chats: openChats }}
       />
       <div className="min-w-0">{children}</div>
     </div>

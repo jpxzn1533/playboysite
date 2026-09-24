@@ -28,6 +28,7 @@ export type ProductFormInitial = {
   active: boolean;
   featured: boolean;
   bestSeller: boolean;
+  manualChat: boolean;
   categoryId: string | null;
   images: string[];
   variants: {
@@ -367,6 +368,19 @@ export function ProductForm({
             <Toggle name="featured" label="Destaque" defaultChecked={initial?.featured ?? false} />
             <Toggle name="bestSeller" label="Mais vendido" defaultChecked={initial?.bestSeller ?? false} />
           </div>
+        </div>
+
+        <div className="card p-6">
+          <h3 className="mb-1 font-semibold text-white">Entrega</h3>
+          <p className="mb-4 text-xs text-ink-400">
+            Ative para produtos entregues manualmente por um atendimento (chat ao
+            vivo com a equipe). Ao comprar, abre um chat vinculado ao pedido.
+          </p>
+          <Toggle
+            name="manualChat"
+            label="Entrega por chat ao vivo (atendimento manual)"
+            defaultChecked={initial?.manualChat ?? false}
+          />
         </div>
 
         <div className="flex gap-3">

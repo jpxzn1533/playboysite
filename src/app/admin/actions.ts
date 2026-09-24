@@ -113,6 +113,7 @@ export async function createProduct(formData: FormData): Promise<ActionResult> {
       active: str(formData.get("active")) === "on",
       featured: str(formData.get("featured")) === "on",
       bestSeller: str(formData.get("bestSeller")) === "on",
+      manualChat: str(formData.get("manualChat")) === "on",
       categoryId,
       images: { create: images.map((url, i) => ({ url, position: i })) },
       variants: {
@@ -179,6 +180,7 @@ export async function updateProduct(
         active: str(formData.get("active")) === "on",
         featured: str(formData.get("featured")) === "on",
         bestSeller: str(formData.get("bestSeller")) === "on",
+        manualChat: str(formData.get("manualChat")) === "on",
         categoryId: str(formData.get("categoryId")) || null,
       },
     });
@@ -408,6 +410,44 @@ export async function adjustVariantStock(
 /* ------------------------------------------------------------------ */
 /* Open carts — admin editing + manual delivery                        */
 /* ------------------------------------------------------------------ */
+
+/* ------------------------------------------------------------------ */
+/* Manual delivery chats (conversations)                               */
+/* ------------------------------------------------------------------ */
+
+export async function setConversationStatus(
+  conversationId: string,
+  status: "OPEN" | "CLOSED"
+): Promise<ActionResult> {
+  let admin;
+  try {
+    admin = await requireAdmin();
+  } catch {
+    return { ok: false, error: "Não autorizado." };
+  }
+  const convo = await prisma.conversation.findUnique({
+    where: { id: conversationId },
+    include: { order: { select: { code: true } } },
+  });
+  if (!convo) return { ok: false, error: "Atendimento não encontrado." };
+
+  await prisma.conversation.update({
+    where: { id: conversationId },
+    data: { status },
+  });
+
+  await logAdminAction({
+    adminId: admin.userId,
+    adminName: admin.name,
+    action: status === "CLOSED" ? "Atendimento encerrado" : "Atendimento reaberto",
+    entityType: "Conversation",
+    entityId: convo.order?.code ?? conversationId,
+  });
+
+  revalidatePath("/admin/entregas-manuais");
+  revalidatePath(`/admin/entregas-manuais/${conversationId}`);
+  return { ok: true };
+}
 
 /* ------------------------------------------------------------------ */
 /* Deliverables (stock inventory)                                      */

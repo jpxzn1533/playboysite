@@ -11,18 +11,20 @@ import {
   TagIcon,
   UsersIcon,
   ClipboardIcon,
+  ChatIcon,
   LogoutIcon,
   MenuIcon,
   CloseIcon,
 } from "@/components/ui/icons";
 
-type Badges = { carts: number; orders: number };
+type Badges = { carts: number; orders: number; chats: number };
 
 const NAV = [
   { href: "/admin", label: "Dashboard", icon: ChartIcon, exact: true },
   { href: "/admin/produtos", label: "Produtos", icon: BoxIcon },
   { href: "/admin/estoque", label: "Estoque", icon: LayersIcon },
   { href: "/admin/carrinhos", label: "Carrinhos abertos", icon: CartIcon, badge: "carts" as const },
+  { href: "/admin/entregas-manuais", label: "Entregas manuais", icon: ChatIcon, badge: "chats" as const },
   { href: "/admin/vendas", label: "Vendas", icon: TagIcon, badge: "orders" as const },
   { href: "/admin/clientes", label: "Clientes", icon: UsersIcon },
   { href: "/admin/logs", label: "Logs", icon: ClipboardIcon },

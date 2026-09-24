@@ -30,10 +30,11 @@ model User {
   discordId    String?
   createdAt    DateTime @default(now())
 
-  carts      Cart[]
-  orders     Order[]
-  deliveries Delivery[] @relation("AdminDeliveries")
-  logs       AdminLog[]
+  carts         Cart[]
+  orders        Order[]
+  deliveries    Delivery[]     @relation("AdminDeliveries")
+  logs          AdminLog[]
+  conversations Conversation[]
 }
 
 model Category {
@@ -58,6 +59,7 @@ model Product {
   active           Boolean  @default(true)
   featured         Boolean  @default(false)
   bestSeller       Boolean  @default(false)
+  manualChat       Boolean  @default(false) // entrega por chat ao vivo (atendimento manual)
   lowStockThreshold Int     @default(5)
   categoryId       String?
   createdAt        DateTime @default(now())
@@ -157,6 +159,34 @@ model Order {
   items        OrderItem[]
   delivery     Delivery?
   deliverables Deliverable[]
+  conversation Conversation?
+}
+
+model Conversation {
+  id            String    @id @default(cuid())
+  orderId       String    @unique
+  userId        String?
+  status        String    @default("OPEN") // OPEN | CLOSED
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  lastMessageAt DateTime  @default(now())
+
+  order    Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  user     User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  messages Message[]
+}
+
+model Message {
+  id             String   @id @default(cuid())
+  conversationId String
+  senderId       String?
+  senderName     String   @default("")
+  senderRole     String   @default("CUSTOMER") // CUSTOMER | ADMIN
+  type           String   @default("TEXT") // TEXT | IMAGE
+  content        String
+  createdAt      DateTime @default(now())
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
 }
 
 model OrderItem {

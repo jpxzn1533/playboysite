@@ -105,6 +105,18 @@ export async function POST(req: Request) {
       data: { status: "CONVERTED" },
     });
 
+    // If any product requires manual chat delivery, open a conversation.
+    const needsChat = full.items.some((i) => i.product?.manualChat);
+    if (needsChat) {
+      await tx.conversation.create({
+        data: {
+          orderId: created.id,
+          userId: session?.userId ?? null,
+          status: "OPEN",
+        },
+      });
+    }
+
     return created;
   });
 

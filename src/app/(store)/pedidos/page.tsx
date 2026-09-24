@@ -39,7 +39,7 @@ export default async function OrdersPage() {
 
   const orders = await prisma.order.findMany({
     where: { userId: user.id },
-    include: { items: true, delivery: true },
+    include: { items: true, delivery: true, conversation: true },
     orderBy: { createdAt: "desc" },
   });
 
@@ -119,6 +119,15 @@ export default async function OrdersPage() {
                     ✓ Entregue em {formatDateTime(order.delivery.deliveredAt)}
                     {order.delivery.manual ? " (entrega manual)" : ""}
                   </p>
+                )}
+
+                {order.conversation && (
+                  <Link
+                    href={`/pedidos/atendimento/${order.conversation.id}`}
+                    className="mt-4 inline-flex items-center gap-2 rounded-xl border border-white/10 bg-ink-800 px-4 py-2.5 text-sm text-white transition-colors hover:border-white/20 hover:bg-ink-750"
+                  >
+                    💬 {order.conversation.status === "OPEN" ? "Abrir atendimento" : "Ver atendimento"}
+                  </Link>
                 )}
               </div>
             </Reveal>

@@ -128,6 +128,14 @@ export function GoogleIcon(p: SVGProps<SVGSVGElement>) {
   );
 }
 
+export function ChatIcon(p: SVGProps<SVGSVGElement>) {
+  return (
+    <svg {...base} {...p}>
+      <path d="M21 11.5a8.38 8.38 0 0 1-8.5 8.5 8.5 8.5 0 0 1-3.8-.9L3 21l1.9-5.7A8.38 8.38 0 0 1 4 11.5 8.5 8.5 0 0 1 12.5 3 8.38 8.38 0 0 1 21 11.5z" />
+    </svg>
+  );
+}
+
 export function BoxIcon(p: SVGProps<SVGSVGElement>) {
   return (
     <svg {...base} {...p}>
