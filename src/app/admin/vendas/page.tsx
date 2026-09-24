@@ -86,6 +86,11 @@ export default async function SalesPage({
                           manual
                         </span>
                       )}
+                      {o.status === "AWAITING_PAYMENT" && o.paymentClaimedAt && (
+                        <span className="ml-2 rounded bg-sky-400/10 px-1.5 py-0.5 text-[10px] font-medium text-sky-300">
+                          pagto informado
+                        </span>
+                      )}
                     </td>
                     <td className="px-4 py-3 text-ink-300">
                       {o.user?.name ?? "Convidado"}

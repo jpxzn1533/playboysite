@@ -11,16 +11,37 @@ export function PixView({
   code,
   pixCode,
   qrDataUrl,
+  manualConfirm = false,
 }: {
   orderId: string;
   code: string;
   pixCode: string;
   qrDataUrl: string;
+  manualConfirm?: boolean;
 }) {
   const { toast } = useToast();
   const { refresh } = useCart();
   const [paid, setPaid] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [claimed, setClaimed] = useState(false);
+  const [claiming, setClaiming] = useState(false);
+
+  async function claim() {
+    setClaiming(true);
+    try {
+      const res = await fetch(`/api/orders/${orderId}/claim`, { method: "POST" });
+      if (res.ok) {
+        setClaimed(true);
+        toast("Recebemos o aviso! Vamos confirmar o pagamento em breve.", "success");
+      } else {
+        toast("Não foi possível avisar. Tente de novo.", "error");
+      }
+    } catch {
+      toast("Erro de conexão.", "error");
+    } finally {
+      setClaiming(false);
+    }
+  }
 
   useEffect(() => {
     refresh(); // cart was converted; update the badge
@@ -121,13 +142,32 @@ export function PixView({
 
         <div className="mt-6 flex items-center justify-center gap-2 rounded-xl border border-white/[0.06] bg-ink-900/50 p-3 text-sm text-ink-300">
           <span className="h-2 w-2 animate-pulse rounded-full bg-amber-400" />
-          Aguardando confirmação do pagamento... (atualiza sozinho)
+          Aguardando confirmação do pagamento...
         </div>
+
+        {manualConfirm && (
+          <div className="mt-4">
+            <button
+              onClick={claim}
+              disabled={claiming || claimed}
+              className="btn-primary w-full py-3"
+            >
+              {claimed ? "Pagamento informado ✓" : claiming ? "Enviando..." : "Já fiz o pagamento"}
+            </button>
+            <p className="mt-2 text-center text-xs text-ink-400">
+              Após pagar, clique acima. Nossa equipe confirma o pagamento e libera
+              a entrega (você é avisado aqui e em “Meus pedidos”).
+            </p>
+          </div>
+        )}
 
         <ol className="mt-6 space-y-2 text-sm text-ink-400">
           <li>1. Abra o app do seu banco e escolha pagar via PIX.</li>
           <li>2. Escaneie o QR Code ou use o “copia e cola”.</li>
-          <li>3. Confirme o pagamento — esta página avisa automaticamente.</li>
+          <li>
+            3. Confirme o pagamento
+            {manualConfirm ? " e clique em “Já fiz o pagamento”." : " — esta página avisa automaticamente."}
+          </li>
         </ol>
 
         <Link

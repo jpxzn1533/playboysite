@@ -12,7 +12,7 @@ export default async function PixPage({
 }) {
   const order = await prisma.order.findUnique({
     where: { id: params.id },
-    select: { id: true, code: true, pixCode: true, status: true },
+    select: { id: true, code: true, pixCode: true, status: true, paymentHash: true },
   });
 
   if (!order || !order.pixCode) redirect("/pedidos");
@@ -22,6 +22,9 @@ export default async function PixPage({
     margin: 1,
   });
 
+  // Static PIX (no gateway hash) requires manual confirmation.
+  const manualConfirm = !order.paymentHash;
+
   return (
     <div className="container-pb py-12 sm:py-16">
       <PixView
@@ -29,6 +32,7 @@ export default async function PixPage({
         code={order.code}
         pixCode={order.pixCode}
         qrDataUrl={qrDataUrl}
+        manualConfirm={manualConfirm}
       />
     </div>
   );

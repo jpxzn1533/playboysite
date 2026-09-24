@@ -166,6 +166,33 @@ Toda alteração feita no admin (preço, estoque, ativar/desativar) reflete imed
 
 ---
 
+## Pagamento via PIX direto (Nubank / chave PIX) — recomendado
+
+Modo mais simples: o site gera o **QR Code + copia-e-cola** apontando direto para
+a sua **chave PIX** (ex.: do Nubank). O dinheiro cai na sua conta, sem gateway e
+sem taxa extra. A **confirmação é manual** (o banco não avisa o site).
+
+Como funciona:
+1. Cliente escolhe PIX e é levado à tela com o QR + copia-e-cola.
+2. Ele paga no app do banco e clica em **"Já fiz o pagamento"**.
+3. No admin (Vendas), o pedido mostra **"pagto informado"** — você confere no
+   Nubank e muda o status para **Pago**.
+4. Ao marcar como Pago, se o pedido for todo de **entregáveis** (e sem chat), a
+   entrega libera automaticamente; senão, você conclui pelo atendimento.
+
+Configuração (variáveis de ambiente — `.env` e Vercel):
+
+```
+PIX_KEY="sua-chave-pix"          # CPF, e-mail, telefone (+55...) ou chave aleatória
+PIX_MERCHANT_NAME="PlayBoy Store"  # nome do recebedor (máx. 25, sem acento)
+PIX_MERCHANT_CITY="Sao Paulo"      # cidade (máx. 15, sem acento)
+```
+
+> Quando `PIX_KEY` está definido, este modo tem prioridade sobre o IronPay. Não
+> precisa de webhook. Depois de definir as variáveis, faça um **redeploy**.
+
+---
+
 ## Pagamento via PIX (IronPay)
 
 O checkout mostra o botão **"Pagar com PIX"** automaticamente quando as variáveis

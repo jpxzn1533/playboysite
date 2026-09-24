@@ -9,11 +9,11 @@ import { formatBRL } from "@/lib/format";
 import { ArrowRightIcon, DiscordIcon } from "@/components/ui/icons";
 
 export function CheckoutForm({
-  pixEnabled,
+  pixMode,
   defaultName,
   defaultEmail,
 }: {
-  pixEnabled: boolean;
+  pixMode: "static" | "gateway" | null;
   defaultName: string;
   defaultEmail: string;
 }) {
@@ -21,6 +21,8 @@ export function CheckoutForm({
   const { toast } = useToast();
   const router = useRouter();
 
+  const pixEnabled = pixMode !== null;
+  const needsPayerData = pixMode === "gateway"; // gateway requires CPF/phone
   const [method, setMethod] = useState<"pix" | "manual">(
     pixEnabled ? "pix" : "manual"
   );
@@ -38,7 +40,7 @@ export function CheckoutForm({
       toast("Informe seu usuário do Discord para a entrega.", "error");
       return;
     }
-    if (method === "pix") {
+    if (method === "pix" && needsPayerData) {
       if (!name.trim() || !email.trim()) {
         toast("Informe nome e e-mail para o PIX.", "error");
         return;
@@ -146,7 +148,7 @@ export function CheckoutForm({
               </button>
             </div>
 
-            {method === "pix" && (
+            {method === "pix" && needsPayerData && (
               <div className="mt-5 grid gap-4 sm:grid-cols-2">
                 <div>
                   <label className="label">Nome completo *</label>

@@ -5,6 +5,7 @@ import { getSession, getCurrentUser } from "@/lib/auth";
 import { ensureCart } from "@/lib/cart";
 import { generateOrderCode } from "@/lib/log";
 import { isIronpayConfigured, createPixTransaction } from "@/lib/ironpay";
+import { isStaticPixConfigured, buildStaticPix } from "@/lib/pix";
 
 const schema = z.object({
   deliveryMethod: z.string().min(1).default("Discord"),
@@ -66,17 +67,20 @@ export async function POST(req: Request) {
 
   const total = full.items.reduce((s, i) => s + i.unitPrice * i.quantity, 0);
 
-  // Decide payment method.
+  // Decide payment method. Static PIX (Nubank) is preferred when configured;
+  // otherwise fall back to the IronPay gateway.
   const currentUser = await getCurrentUser();
-  const wantsPix =
-    parsed.data.paymentMethod === "pix" && isIronpayConfigured();
+  const staticPix = isStaticPixConfigured();
+  const gatewayPix = !staticPix && isIronpayConfigured();
+  const wantsPix = parsed.data.paymentMethod === "pix" && (staticPix || gatewayPix);
 
   const payerName = (currentUser?.name || parsed.data.name || "").trim();
   const payerEmail = (currentUser?.email || parsed.data.email || "").trim();
   const payerPhone = (parsed.data.phone || "").trim();
   const payerCpf = (parsed.data.cpf || "").replace(/\D/g, "");
 
-  if (wantsPix) {
+  // The gateway needs full payer data; static PIX does not.
+  if (wantsPix && gatewayPix) {
     if (!payerName || !payerEmail) {
       return NextResponse.json(
         { error: "Informe nome e e-mail para o pagamento via PIX." },
@@ -158,7 +162,22 @@ export async function POST(req: Request) {
     return created;
   });
 
-  // Create the PIX charge (IronPay) when requested/configured.
+  // Static PIX (Nubank): generate the copy-and-paste code locally.
+  if (wantsPix && staticPix) {
+    const code = buildStaticPix({ amountBRL: total, txid: order.code });
+    await prisma.order.update({
+      where: { id: order.id },
+      data: { pixCode: code },
+    });
+    return NextResponse.json({
+      ok: true,
+      code: order.code,
+      id: order.id,
+      pix: true,
+    });
+  }
+
+  // Create the PIX charge (IronPay gateway) when requested/configured.
   if (wantsPix) {
     const origin = new URL(req.url).origin;
     const pix = await createPixTransaction({

@@ -96,6 +96,12 @@ export default async function SaleDetailPage({
                     <span className="ml-1.5 text-xs text-emerald-300">
                       · pago em {formatDateTime(order.paidAt)}
                     </span>
+                  ) : order.paymentClaimedAt ? (
+                    <span className="ml-1.5 text-xs text-sky-300">
+                      · cliente informou pagamento em{" "}
+                      {formatDateTime(order.paymentClaimedAt)} — verifique no Nubank
+                      e marque como “Pago”
+                    </span>
                   ) : (
                     <span className="ml-1.5 text-xs text-amber-300">
                       · não confirmado
