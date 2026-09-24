@@ -42,23 +42,35 @@ export default async function SaleDetailPage({
             </h3>
             <div className="divide-y divide-white/[0.06]">
               {order.items.map((it) => (
-                <div key={it.id} className="flex items-center justify-between gap-3 py-3">
-                  <div>
-                    <p className="font-medium text-white">
-                      {it.name}
-                      {it.variantName && (
-                        <span className="ml-2 rounded-md border border-white/10 bg-ink-800 px-1.5 py-0.5 text-[11px] text-ink-300">
-                          {it.variantName}
-                        </span>
-                      )}
-                    </p>
-                    <p className="text-sm text-ink-400">
-                      {it.quantity} × {formatBRL(it.unitPrice)}
-                    </p>
+                <div key={it.id} className="py-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <p className="font-medium text-white">
+                        {it.name}
+                        {it.variantName && (
+                          <span className="ml-2 rounded-md border border-white/10 bg-ink-800 px-1.5 py-0.5 text-[11px] text-ink-300">
+                            {it.variantName}
+                          </span>
+                        )}
+                      </p>
+                      <p className="text-sm text-ink-400">
+                        {it.quantity} × {formatBRL(it.unitPrice)}
+                      </p>
+                    </div>
+                    <span className="font-medium text-white">
+                      {formatBRL(it.unitPrice * it.quantity)}
+                    </span>
                   </div>
-                  <span className="font-medium text-white">
-                    {formatBRL(it.unitPrice * it.quantity)}
-                  </span>
+                  {it.deliveredContent && (
+                    <div className="mt-2 rounded-lg border border-emerald-400/20 bg-emerald-400/[0.06] p-3">
+                      <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-emerald-300">
+                        Entregável enviado
+                      </p>
+                      <pre className="whitespace-pre-wrap break-all font-mono text-xs text-emerald-100/90">
+                        {it.deliveredContent}
+                      </pre>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

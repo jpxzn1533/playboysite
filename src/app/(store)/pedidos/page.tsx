@@ -81,17 +81,26 @@ export default async function OrdersPage() {
 
                 <div className="mt-4 space-y-2">
                   {order.items.map((it) => (
-                    <div
-                      key={it.id}
-                      className="flex justify-between gap-3 text-sm"
-                    >
-                      <span className="text-ink-300">
-                        {it.quantity}× {it.name}
-                        {it.variantName ? ` — ${it.variantName}` : ""}
-                      </span>
-                      <span className="shrink-0 text-ink-200">
-                        {formatBRL(it.unitPrice * it.quantity)}
-                      </span>
+                    <div key={it.id} className="text-sm">
+                      <div className="flex justify-between gap-3">
+                        <span className="text-ink-300">
+                          {it.quantity}× {it.name}
+                          {it.variantName ? ` — ${it.variantName}` : ""}
+                        </span>
+                        <span className="shrink-0 text-ink-200">
+                          {formatBRL(it.unitPrice * it.quantity)}
+                        </span>
+                      </div>
+                      {it.deliveredContent && (
+                        <div className="mt-2 rounded-lg border border-emerald-400/20 bg-emerald-400/[0.06] p-3">
+                          <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-emerald-300">
+                            Seu conteúdo entregue
+                          </p>
+                          <pre className="whitespace-pre-wrap break-all font-mono text-xs text-emerald-100/90">
+                            {it.deliveredContent}
+                          </pre>
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>

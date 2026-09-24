@@ -63,11 +63,12 @@ model Product {
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
-  category   Category?        @relation(fields: [categoryId], references: [id], onDelete: SetNull)
-  images     ProductImage[]
-  variants   ProductVariant[]
-  cartItems  CartItem[]
-  orderItems OrderItem[]
+  category     Category?        @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  images       ProductImage[]
+  variants     ProductVariant[]
+  cartItems    CartItem[]
+  orderItems   OrderItem[]
+  deliverables Deliverable[]
 }
 
 model ProductVariant {
@@ -83,9 +84,25 @@ model ProductVariant {
   position   Int      @default(0)
   createdAt  DateTime @default(now())
 
-  product    Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
-  cartItems  CartItem[]
-  orderItems OrderItem[]
+  product      Product       @relation(fields: [productId], references: [id], onDelete: Cascade)
+  cartItems    CartItem[]
+  orderItems   OrderItem[]
+  deliverables Deliverable[]
+}
+
+model Deliverable {
+  id          String    @id @default(cuid())
+  productId   String
+  variantId   String?
+  content     String
+  status      String    @default("AVAILABLE") // AVAILABLE | DELIVERED
+  orderId     String?
+  createdAt   DateTime  @default(now())
+  deliveredAt DateTime?
+
+  product Product         @relation(fields: [productId], references: [id], onDelete: Cascade)
+  variant ProductVariant? @relation(fields: [variantId], references: [id], onDelete: Cascade)
+  order   Order?          @relation(fields: [orderId], references: [id], onDelete: SetNull)
 }
 
 model ProductImage {
@@ -135,10 +152,11 @@ model Order {
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt
 
-  user     User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
-  cart     Cart?       @relation(fields: [cartId], references: [id], onDelete: SetNull)
-  items    OrderItem[]
-  delivery Delivery?
+  user         User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+  cart         Cart?         @relation(fields: [cartId], references: [id], onDelete: SetNull)
+  items        OrderItem[]
+  delivery     Delivery?
+  deliverables Deliverable[]
 }
 
 model OrderItem {
@@ -146,10 +164,11 @@ model OrderItem {
   orderId     String
   productId   String?
   variantId   String?
-  name        String
-  variantName String  @default("")
-  quantity    Int
-  unitPrice   Float
+  name             String
+  variantName      String  @default("")
+  quantity         Int
+  unitPrice        Float
+  deliveredContent String  @default("") // conteúdo dos entregáveis entregues neste item
 
   order   Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
   product Product?        @relation(fields: [productId], references: [id], onDelete: SetNull)

@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
 import { logAdminAction, generateOrderCode } from "@/lib/log";
 import { slugify } from "@/lib/format";
+import { syncStock, consumeDeliverables, isManaged } from "@/lib/stock";
 
 type ActionResult = { ok: boolean; error?: string; id?: string; code?: string };
 
@@ -408,6 +409,94 @@ export async function adjustVariantStock(
 /* Open carts — admin editing + manual delivery                        */
 /* ------------------------------------------------------------------ */
 
+/* ------------------------------------------------------------------ */
+/* Deliverables (stock inventory)                                      */
+/* ------------------------------------------------------------------ */
+
+export async function addDeliverables(
+  productId: string,
+  variantId: string | null,
+  raw: string
+): Promise<ActionResult> {
+  let admin;
+  try {
+    admin = await requireAdmin();
+  } catch {
+    return { ok: false, error: "Não autorizado." };
+  }
+
+  const lines = (raw ?? "")
+    .split("\n")
+    .map((l) => l.trim())
+    .filter(Boolean);
+
+  if (lines.length === 0) {
+    return { ok: false, error: "Cole ao menos um entregável (um por linha)." };
+  }
+
+  const product = await prisma.product.findUnique({
+    where: { id: productId },
+    select: { name: true },
+  });
+  if (!product) return { ok: false, error: "Produto não encontrado." };
+
+  await prisma.$transaction(async (tx) => {
+    await tx.deliverable.createMany({
+      data: lines.map((content) => ({
+        productId,
+        variantId: variantId ?? null,
+        content,
+        status: "AVAILABLE",
+      })),
+    });
+    await syncStock(tx, productId, variantId ?? null);
+  });
+
+  await logAdminAction({
+    adminId: admin.userId,
+    adminName: admin.name,
+    action: "Entregáveis adicionados",
+    entityType: "Deliverable",
+    entityId: productId,
+    detail: `+${lines.length} entregavel(is) adicionados.`,
+  });
+
+  revalidateAll();
+  revalidatePath(`/admin/estoque/${productId}`);
+  return { ok: true };
+}
+
+export async function removeDeliverable(id: string): Promise<ActionResult> {
+  let admin;
+  try {
+    admin = await requireAdmin();
+  } catch {
+    return { ok: false, error: "Não autorizado." };
+  }
+  const item = await prisma.deliverable.findUnique({ where: { id } });
+  if (!item) return { ok: true };
+  if (item.status !== "AVAILABLE") {
+    return {
+      ok: false,
+      error: "Este entregável já foi entregue e não pode ser removido.",
+    };
+  }
+  await prisma.$transaction(async (tx) => {
+    await tx.deliverable.delete({ where: { id } });
+    await syncStock(tx, item.productId, item.variantId);
+  });
+  await logAdminAction({
+    adminId: admin.userId,
+    adminName: admin.name,
+    action: "Entregável removido",
+    entityType: "Deliverable",
+    entityId: item.productId,
+  });
+  revalidateAll();
+  revalidatePath(`/admin/estoque/${item.productId}`);
+  return { ok: true };
+}
+
 const eff = (p: { price: number; promoPrice: number | null }) =>
   p.promoPrice && p.promoPrice > 0 && p.promoPrice < p.price
     ? p.promoPrice
@@ -564,15 +653,39 @@ export async function manualDeliverCart(
           })),
         },
       },
+      include: { items: true },
     });
 
     for (const i of cart.items) {
+      // Consume deliverables when the scope is managed by them.
+      const contents = await consumeDeliverables(tx, {
+        productId: i.productId,
+        variantId: i.variantId,
+        quantity: i.quantity,
+        orderId: created.id,
+      });
+      const managed = contents.length > 0 || (await isManaged(tx, i.productId, i.variantId));
+
+      if (contents.length > 0) {
+        const orderItem = created.items.find(
+          (oi) => oi.productId === i.productId && oi.variantId === i.variantId
+        );
+        if (orderItem) {
+          await tx.orderItem.update({
+            where: { id: orderItem.id },
+            data: { deliveredContent: contents.join("\n") },
+          });
+        }
+      }
+
+      // Sold count always increments; stock is handled by consume (managed) or
+      // decremented manually (non-managed).
       if (i.variant) {
         await tx.productVariant.update({
           where: { id: i.variant.id },
           data: {
-            stock: Math.max(0, i.variant.stock - i.quantity),
             soldCount: { increment: i.quantity },
+            ...(managed ? {} : { stock: Math.max(0, i.variant.stock - i.quantity) }),
           },
         });
         if (i.product) {
@@ -585,8 +698,8 @@ export async function manualDeliverCart(
         await tx.product.update({
           where: { id: i.productId },
           data: {
-            stock: Math.max(0, i.product.stock - i.quantity),
             soldCount: { increment: i.quantity },
+            ...(managed ? {} : { stock: Math.max(0, i.product.stock - i.quantity) }),
           },
         });
       }
@@ -659,13 +772,34 @@ async function fulfillOrder(orderId: string, adminId: string, adminName: string)
 
   await prisma.$transaction(async (tx) => {
     for (const i of order.items) {
+      const variantId = i.variantId ?? null;
+      const productId = i.productId ?? i.product?.id ?? null;
+
+      let contents: string[] = [];
+      let managed = false;
+      if (productId) {
+        contents = await consumeDeliverables(tx, {
+          productId,
+          variantId,
+          quantity: i.quantity,
+          orderId,
+        });
+        managed = contents.length > 0 || (await isManaged(tx, productId, variantId));
+        if (contents.length > 0) {
+          await tx.orderItem.update({
+            where: { id: i.id },
+            data: { deliveredContent: contents.join("\n") },
+          });
+        }
+      }
+
       if (i.variant) {
         await tx.productVariant.update({
           where: { id: i.variant.id },
           data: {
-            stock: Math.max(0, i.variant.stock - i.quantity),
             reserved: Math.max(0, i.variant.reserved - i.quantity),
             soldCount: { increment: i.quantity },
+            ...(managed ? {} : { stock: Math.max(0, i.variant.stock - i.quantity) }),
           },
         });
         if (i.product) {
@@ -678,9 +812,9 @@ async function fulfillOrder(orderId: string, adminId: string, adminName: string)
         await tx.product.update({
           where: { id: i.product.id },
           data: {
-            stock: Math.max(0, i.product.stock - i.quantity),
             reserved: Math.max(0, i.product.reserved - i.quantity),
             soldCount: { increment: i.quantity },
+            ...(managed ? {} : { stock: Math.max(0, i.product.stock - i.quantity) }),
           },
         });
       }
