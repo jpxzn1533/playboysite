@@ -6,6 +6,7 @@ import { ensureCart } from "@/lib/cart";
 import { generateOrderCode } from "@/lib/log";
 import { isIronpayConfigured, createPixTransaction } from "@/lib/ironpay";
 import { isStaticPixConfigured, buildStaticPix } from "@/lib/pix";
+import { isPagbankConfigured, createPagbankPixOrder } from "@/lib/pagbank";
 
 const schema = z.object({
   deliveryMethod: z.string().min(1).default("Discord"),
@@ -67,12 +68,15 @@ export async function POST(req: Request) {
 
   const total = full.items.reduce((s, i) => s + i.unitPrice * i.quantity, 0);
 
-  // Decide payment method. Static PIX (Nubank) is preferred when configured;
-  // otherwise fall back to the IronPay gateway.
+  // Decide payment method. Automatic gateways (PagBank, then IronPay) take
+  // precedence; static PIX (direct key, manual confirmation) is the fallback.
   const currentUser = await getCurrentUser();
-  const staticPix = isStaticPixConfigured();
-  const gatewayPix = !staticPix && isIronpayConfigured();
-  const wantsPix = parsed.data.paymentMethod === "pix" && (staticPix || gatewayPix);
+  const pagbank = isPagbankConfigured();
+  const ironpay = !pagbank && isIronpayConfigured();
+  const gatewayPix = pagbank || ironpay; // requires payer data (CPF/phone)
+  const staticPix = !gatewayPix && isStaticPixConfigured();
+  const wantsPix =
+    parsed.data.paymentMethod === "pix" && (gatewayPix || staticPix);
 
   const payerName = (currentUser?.name || parsed.data.name || "").trim();
   const payerEmail = (currentUser?.email || parsed.data.email || "").trim();
@@ -162,13 +166,54 @@ export async function POST(req: Request) {
     return created;
   });
 
-  // Static PIX (Nubank): generate the copy-and-paste code locally.
+  // Static PIX (direct key / Nubank): generate the copy-and-paste code locally.
   if (wantsPix && staticPix) {
     const code = buildStaticPix({ amountBRL: total, txid: order.code });
     await prisma.order.update({
       where: { id: order.id },
       data: { pixCode: code },
     });
+    return NextResponse.json({
+      ok: true,
+      code: order.code,
+      id: order.id,
+      pix: true,
+    });
+  }
+
+  // PagBank gateway (automatic confirmation via webhook).
+  if (wantsPix && pagbank) {
+    const origin = new URL(req.url).origin;
+    const result = await createPagbankPixOrder({
+      amountBRL: total,
+      orderCode: order.code,
+      customer: {
+        name: payerName,
+        email: payerEmail,
+        cpf: payerCpf,
+        phone: payerPhone,
+      },
+      notificationUrl: `${origin}/api/webhooks/pagbank`,
+    });
+
+    if (!result.ok) {
+      return NextResponse.json(
+        {
+          error:
+            result.error ??
+            "Não foi possível gerar o PIX. Tente novamente ou fale com o suporte.",
+          code: order.code,
+          id: order.id,
+        },
+        { status: 502 }
+      );
+    }
+
+    await prisma.order.update({
+      where: { id: order.id },
+      data: { paymentHash: result.orderId, pixCode: result.pixCode },
+    });
+
     return NextResponse.json({
       ok: true,
       code: order.code,

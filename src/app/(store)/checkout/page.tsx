@@ -1,5 +1,6 @@
 import { getCurrentUser } from "@/lib/auth";
 import { isIronpayConfigured } from "@/lib/ironpay";
+import { isPagbankConfigured } from "@/lib/pagbank";
 import { isStaticPixConfigured } from "@/lib/pix";
 import { CheckoutForm } from "@/components/store/CheckoutForm";
 
@@ -7,10 +8,11 @@ export const dynamic = "force-dynamic";
 
 export default async function CheckoutPage() {
   const user = await getCurrentUser();
-  const pixMode = isStaticPixConfigured()
-    ? "static"
-    : isIronpayConfigured()
-      ? "gateway"
+  const gateway = isPagbankConfigured() || isIronpayConfigured();
+  const pixMode = gateway
+    ? "gateway"
+    : isStaticPixConfigured()
+      ? "static"
       : null;
 
   return (

@@ -166,7 +166,40 @@ Toda alteração feita no admin (preço, estoque, ativar/desativar) reflete imed
 
 ---
 
-## Pagamento via PIX direto (Nubank / chave PIX) — recomendado
+## Pagamento via PIX AUTOMÁTICO (PagBank) — recomendado
+
+Confirmação **automática**: o PagBank gera o PIX, detecta o pagamento e avisa o
+site por **webhook**. O pedido é confirmado sozinho e, se for tudo entregável, a
+entrega libera na hora. O saldo do PagBank pode ser **sacado para o seu Nubank**.
+
+Como funciona:
+1. Cliente escolhe PIX e informa nome, e-mail, CPF e telefone.
+2. O site cria o pedido no PagBank e mostra **QR + copia-e-cola**.
+3. Cliente paga → PagBank chama nosso webhook → o site **reconsulta o PagBank**
+   para confirmar e marca o pedido como **Pago** automaticamente.
+
+Configuração (variáveis de ambiente — `.env` e Vercel):
+
+```
+PAGBANK_TOKEN="seu-token-de-producao"   # PagBank → Integrações → Token de API
+PAGBANK_ENV="production"                  # ou "sandbox" para testar
+```
+
+Cadastre a URL de webhook no PagBank (ou o campo é enviado automaticamente por
+pedido via `notification_urls`, o que já fazemos):
+
+```
+https://SEU-DOMINIO.vercel.app/api/webhooks/pagbank
+```
+
+> O PagBank tem prioridade sobre os outros modos quando `PAGBANK_TOKEN` está
+> definido. O recebedor precisa ter uma **chave PIX ativa** na conta PagBank.
+> Requisito: **conta PagBank/PagSeguro** (a retirada para o Nubank é feita no app
+> do PagBank).
+
+---
+
+## Pagamento via PIX direto (Nubank / chave PIX) — modo manual
 
 Modo mais simples: o site gera o **QR Code + copia-e-cola** apontando direto para
 a sua **chave PIX** (ex.: do Nubank). O dinheiro cai na sua conta, sem gateway e
