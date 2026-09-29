@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, Space_Grotesk, Permanent_Marker } from "next/font/google";
+import { Inter, Space_Grotesk, Rubik_Spray_Paint } from "next/font/google";
 import "./globals.css";
 import { ToastProvider } from "@/components/ui/Toast";
 import { CartProvider } from "@/components/cart/CartProvider";
@@ -18,7 +18,7 @@ const spaceGrotesk = Space_Grotesk({
 });
 
 // Graffiti font used on brand + display titles.
-const graffiti = Permanent_Marker({
+const graffiti = Rubik_Spray_Paint({
   subsets: ["latin"],
   weight: "400",
   variable: "--font-display",
