@@ -1,6 +1,7 @@
 import "server-only";
 import { prisma } from "./prisma";
 import { consumeDeliverables, isManaged } from "./stock";
+import { grantRolesForOrder } from "./discord";
 
 /**
  * Marks an order as DELIVERED: consumes deliverables (setting the delivered
@@ -89,6 +90,9 @@ export async function fulfillOrder(
     }
   });
 
+  // Grant Discord roles (non-fatal, idempotent).
+  await grantRolesForOrder(orderId);
+
   return order;
 }
 
@@ -139,5 +143,7 @@ export async function markOrderPaid(orderId: string) {
       where: { id: orderId },
       data: { status: "PAID", paidAt: new Date() },
     });
+    // Even when delivery is finished later, grant roles now that it's paid.
+    await grantRolesForOrder(orderId);
   }
 }

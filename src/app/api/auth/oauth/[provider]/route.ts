@@ -27,6 +27,9 @@ export async function GET(
     return NextResponse.redirect(`${origin}/conta?erro=oauth_nao_configurado`);
   }
 
+  const nextParam = new URL(req.url).searchParams.get("next");
+  const next = nextParam && nextParam.startsWith("/") ? nextParam : "";
+
   const state = randomUUID();
   cookies().set("pb_oauth_state", `${provider}:${state}`, {
     httpOnly: true,
@@ -35,6 +38,15 @@ export async function GET(
     path: "/",
     maxAge: 600,
   });
+  if (next) {
+    cookies().set("pb_oauth_next", next, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+      maxAge: 600,
+    });
+  }
 
   const redirectUri = `${origin}/api/auth/oauth/${provider}/callback`;
   return NextResponse.redirect(buildAuthorizeUrl(provider, redirectUri, state));

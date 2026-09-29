@@ -60,6 +60,7 @@ model Product {
   featured         Boolean  @default(false)
   bestSeller       Boolean  @default(false)
   manualChat       Boolean  @default(false) // entrega por chat ao vivo (atendimento manual)
+  discordRoleId    String?  // cargo do Discord atribuído automaticamente ao comprar
   lowStockThreshold Int     @default(5)
   categoryId       String?
   createdAt        DateTime @default(now())

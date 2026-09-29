@@ -7,6 +7,7 @@ import { logAdminAction, generateOrderCode } from "@/lib/log";
 import { slugify } from "@/lib/format";
 import { syncStock, consumeDeliverables, isManaged } from "@/lib/stock";
 import { fulfillOrder } from "@/lib/fulfill";
+import { grantRolesForOrder } from "@/lib/discord";
 
 type ActionResult = { ok: boolean; error?: string; id?: string; code?: string };
 
@@ -115,6 +116,7 @@ export async function createProduct(formData: FormData): Promise<ActionResult> {
       featured: str(formData.get("featured")) === "on",
       bestSeller: str(formData.get("bestSeller")) === "on",
       manualChat: str(formData.get("manualChat")) === "on",
+      discordRoleId: str(formData.get("discordRoleId")) || null,
       categoryId,
       images: { create: images.map((url, i) => ({ url, position: i })) },
       variants: {
@@ -182,6 +184,7 @@ export async function updateProduct(
         featured: str(formData.get("featured")) === "on",
         bestSeller: str(formData.get("bestSeller")) === "on",
         manualChat: str(formData.get("manualChat")) === "on",
+        discordRoleId: str(formData.get("discordRoleId")) || null,
         categoryId: str(formData.get("categoryId")) || null,
       },
     });
@@ -772,6 +775,8 @@ export async function manualDeliverCart(
     entityId: order.code,
     detail: `Pedido ${order.code} entregue manualmente sem pagamento a partir do carrinho ${cart.id.slice(-6)}.`,
   });
+
+  await grantRolesForOrder(order.id);
 
   revalidateAll();
   return { ok: true, code: order.code, id: order.id };

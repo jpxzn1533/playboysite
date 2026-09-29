@@ -261,6 +261,40 @@ https://SEU-DOMINIO.vercel.app/api/webhooks/ironpay
 
 ---
 
+## Sincronização com o Discord + login obrigatório
+
+- **Login obrigatório para comprar:** o checkout e a API de pedidos exigem conta.
+  Sem login, o cliente vê uma tela pedindo para entrar (com o carrinho mantido).
+- **Login prioriza o Discord:** a página `/conta` mostra "Entrar com Discord" em
+  destaque; e-mail/Google ficam em "Outras opções" (evita travar o admin).
+- **Discord do cliente no pedido:** quem entra com Discord tem o usuário
+  preenchido automaticamente no checkout.
+- **Cargo automático ao comprar (bot):** ao pagar/receber, um bot dá cargos no seu
+  servidor. Defina o **ID do cargo** por produto (no formulário do produto) e/ou um
+  cargo global padrão.
+
+Configuração do bot (variáveis de ambiente):
+
+```
+DISCORD_BOT_TOKEN=...        # Discord Developer Portal → sua app → Bot → Reset Token
+DISCORD_GUILD_ID=...         # ID do servidor (ative "Modo desenvolvedor" no Discord)
+DISCORD_DEFAULT_ROLE_ID=...  # opcional: cargo dado em toda compra
+```
+
+Passos no Discord:
+1. Na sua aplicação (a mesma do login), aba **Bot** → gere o **token**.
+2. Convide o bot no servidor com a permissão **Gerenciar Cargos** (OAuth2 → URL
+   Generator → scope `bot` → permissão *Manage Roles*).
+3. Em **Configurações do Servidor → Cargos**, arraste o cargo do **bot para ACIMA**
+   dos cargos que ele vai atribuir (senão o Discord recusa).
+4. Copie o **ID do servidor** e os **IDs dos cargos** (clique direito → Copiar ID,
+   com Modo Desenvolvedor ligado) e preencha as variáveis / o campo no produto.
+
+> O cliente precisa **ter entrado com Discord** (para o site saber o ID dele) e
+> **estar no servidor** para receber o cargo.
+
+---
+
 ## Deploy na Vercel (produção)
 
 O projeto já usa **PostgreSQL** e cria as tabelas + categorias automaticamente no

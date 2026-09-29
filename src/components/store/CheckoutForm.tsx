@@ -12,10 +12,12 @@ export function CheckoutForm({
   pixMode,
   defaultName,
   defaultEmail,
+  defaultDiscord,
 }: {
   pixMode: "static" | "gateway" | null;
   defaultName: string;
   defaultEmail: string;
+  defaultDiscord?: string;
 }) {
   const { items, subtotal, count, loading, refresh } = useCart();
   const { toast } = useToast();
@@ -26,7 +28,7 @@ export function CheckoutForm({
   const [method, setMethod] = useState<"pix" | "manual">(
     pixEnabled ? "pix" : "manual"
   );
-  const [discord, setDiscord] = useState("");
+  const [discord, setDiscord] = useState(defaultDiscord ?? "");
   const [note, setNote] = useState("");
   const [name, setName] = useState(defaultName);
   const [email, setEmail] = useState(defaultEmail);

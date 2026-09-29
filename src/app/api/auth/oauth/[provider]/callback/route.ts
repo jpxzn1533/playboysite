@@ -105,9 +105,17 @@ export async function GET(
       });
     }
 
-    return NextResponse.redirect(
-      `${origin}${user.role === "ADMIN" ? "/admin" : "/"}`
-    );
+    // Redirect target: a saved "next" (e.g. back to checkout) wins.
+    const nextCookie = cookies().get("pb_oauth_next")?.value;
+    cookies().delete("pb_oauth_next");
+    const dest =
+      nextCookie && nextCookie.startsWith("/")
+        ? nextCookie
+        : user.role === "ADMIN"
+          ? "/admin"
+          : "/";
+
+    return NextResponse.redirect(`${origin}${dest}`);
   } catch (err) {
     console.error("OAuth callback error", err);
     return fail("falha_login");

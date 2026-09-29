@@ -22,22 +22,28 @@ export function AccountForm({
   initialMode,
   providers,
   error,
+  next,
 }: {
   initialMode: "login" | "register";
   providers: { google: boolean; discord: boolean };
   error?: string;
+  next?: string;
 }) {
   const [mode, setMode] = useState<"login" | "register">(initialMode);
   const { toast } = useToast();
   const { refresh } = useCart();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [showEmail, setShowEmail] = useState(!providers.discord);
   const [form, setForm] = useState({
     name: "",
     email: "",
     password: "",
     discordName: "",
   });
+
+  const oauthHref = (p: "google" | "discord") =>
+    `/api/auth/oauth/${p}${next ? `?next=${encodeURIComponent(next)}` : ""}`;
 
   useEffect(() => {
     if (error) toast(OAUTH_ERRORS[error] ?? "Não foi possível entrar.", "error");
@@ -75,14 +81,14 @@ export function AccountForm({
         "success"
       );
       router.refresh();
-      router.push(data.role === "ADMIN" ? "/admin" : "/");
+      router.push(
+        data.role === "ADMIN" ? "/admin" : next ? next : "/"
+      );
     } catch {
       toast("Erro de conexão. Tente novamente.", "error");
       setLoading(false);
     }
   }
-
-  const hasSocial = providers.google || providers.discord;
 
   return (
     <div className="mx-auto max-w-md">
@@ -105,103 +111,118 @@ export function AccountForm({
         </p>
       </div>
 
-      {/* Tabs */}
-      <div className="mb-6 flex rounded-xl border border-white/10 bg-ink-850 p-1">
-        {(["login", "register"] as const).map((m) => (
+      {/* Discord-first login */}
+      {providers.discord && (
+        <div className="mb-4 space-y-2.5">
+          <a href={oauthHref("discord")} className="btn-primary w-full py-3.5">
+            <DiscordIcon className="h-5 w-5" />
+            Entrar com Discord
+          </a>
+          <p className="text-center text-xs text-ink-400">
+            Recomendado — libera os benefícios da comunidade (cargos, etc).
+          </p>
           <button
-            key={m}
-            onClick={() => setMode(m)}
-            className={
-              "flex-1 rounded-lg py-2 text-sm font-medium transition-colors " +
-              (mode === m
-                ? "bg-white text-ink-950"
-                : "text-ink-300 hover:text-white")
-            }
+            type="button"
+            onClick={() => setShowEmail((v) => !v)}
+            className="mt-1 w-full text-center text-xs text-ink-500 hover:text-white"
           >
-            {m === "login" ? "Entrar" : "Criar conta"}
+            {showEmail ? "Ocultar login por e-mail" : "Outras opções de login"}
           </button>
-        ))}
-      </div>
+        </div>
+      )}
 
-      {/* Social login */}
-      {hasSocial && (
-        <div className="mb-5 space-y-2.5">
+      {(showEmail || !providers.discord) && (
+        <>
           {providers.google && (
-            <a href="/api/auth/oauth/google" className="btn-secondary w-full py-3">
+            <a
+              href={oauthHref("google")}
+              className="btn-secondary mb-4 w-full py-3"
+            >
               <GoogleIcon className="h-5 w-5" />
               Continuar com Google
             </a>
           )}
-          {providers.discord && (
-            <a href="/api/auth/oauth/discord" className="btn-secondary w-full py-3">
-              <DiscordIcon className="h-5 w-5" />
-              Continuar com Discord
-            </a>
-          )}
-          <div className="flex items-center gap-3 pt-1">
-            <span className="h-px flex-1 bg-white/[0.08]" />
-            <span className="text-xs text-ink-500">ou com e-mail</span>
-            <span className="h-px flex-1 bg-white/[0.08]" />
+
+          {/* Tabs */}
+          <div className="mb-6 flex rounded-xl border border-white/10 bg-ink-850 p-1">
+            {(["login", "register"] as const).map((m) => (
+              <button
+                key={m}
+                onClick={() => setMode(m)}
+                className={
+                  "flex-1 rounded-lg py-2 text-sm font-medium transition-colors " +
+                  (mode === m
+                    ? "bg-white text-ink-950"
+                    : "text-ink-300 hover:text-white")
+                }
+              >
+                {m === "login" ? "Entrar" : "Criar conta"}
+              </button>
+            ))}
           </div>
-        </div>
+
+          <form onSubmit={submit} className="card space-y-4 p-6">
+            {mode === "register" && (
+              <div>
+                <label className="label">Nome</label>
+                <input
+                  value={form.name}
+                  onChange={(e) => set("name", e.target.value)}
+                  className="input"
+                  placeholder="Seu nome"
+                  required
+                />
+              </div>
+            )}
+            <div>
+              <label className="label">E-mail</label>
+              <input
+                type="email"
+                value={form.email}
+                onChange={(e) => set("email", e.target.value)}
+                className="input"
+                placeholder="voce@email.com"
+                required
+              />
+            </div>
+            {mode === "register" && (
+              <div>
+                <label className="label">Usuário do Discord (opcional)</label>
+                <input
+                  value={form.discordName}
+                  onChange={(e) => set("discordName", e.target.value)}
+                  className="input"
+                  placeholder="seunome"
+                />
+              </div>
+            )}
+            <div>
+              <label className="label">Senha</label>
+              <input
+                type="password"
+                value={form.password}
+                onChange={(e) => set("password", e.target.value)}
+                className="input"
+                placeholder="••••••••"
+                required
+                minLength={mode === "register" ? 6 : undefined}
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="btn-primary w-full py-3"
+            >
+              {loading
+                ? "Aguarde..."
+                : mode === "login"
+                  ? "Entrar"
+                  : "Criar conta"}
+            </button>
+          </form>
+        </>
       )}
-
-      <form onSubmit={submit} className="card space-y-4 p-6">
-        {mode === "register" && (
-          <div>
-            <label className="label">Nome</label>
-            <input
-              value={form.name}
-              onChange={(e) => set("name", e.target.value)}
-              className="input"
-              placeholder="Seu nome"
-              required
-            />
-          </div>
-        )}
-        <div>
-          <label className="label">E-mail</label>
-          <input
-            type="email"
-            value={form.email}
-            onChange={(e) => set("email", e.target.value)}
-            className="input"
-            placeholder="voce@email.com"
-            required
-          />
-        </div>
-        {mode === "register" && (
-          <div>
-            <label className="label">Usuário do Discord (opcional)</label>
-            <input
-              value={form.discordName}
-              onChange={(e) => set("discordName", e.target.value)}
-              className="input"
-              placeholder="seunome"
-            />
-          </div>
-        )}
-        <div>
-          <label className="label">Senha</label>
-          <input
-            type="password"
-            value={form.password}
-            onChange={(e) => set("password", e.target.value)}
-            className="input"
-            placeholder="••••••••"
-            required
-            minLength={mode === "register" ? 6 : undefined}
-          />
-        </div>
-
-        <button type="submit" disabled={loading} className="btn-primary w-full py-3">
-          {loading
-            ? "Aguarde..."
-            : mode === "login"
-              ? "Entrar"
-              : "Criar conta"}
-        </button>
-      </form>
     </div>
   );
 }

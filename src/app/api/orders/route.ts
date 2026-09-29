@@ -30,6 +30,12 @@ export async function POST(req: Request) {
   }
 
   const session = await getSession();
+  if (!session) {
+    return NextResponse.json(
+      { error: "Faça login para finalizar a compra.", needsLogin: true },
+      { status: 401 }
+    );
+  }
   const cart = await ensureCart();
   const full = await prisma.cart.findUnique({
     where: { id: cart.id },

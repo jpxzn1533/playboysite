@@ -29,6 +29,7 @@ export type ProductFormInitial = {
   featured: boolean;
   bestSeller: boolean;
   manualChat: boolean;
+  discordRoleId: string | null;
   categoryId: string | null;
   images: string[];
   variants: {
@@ -381,6 +382,21 @@ export function ProductForm({
             label="Entrega por chat ao vivo (atendimento manual)"
             defaultChecked={initial?.manualChat ?? false}
           />
+
+          <div className="mt-4 border-t border-white/[0.06] pt-4">
+            <label className="label">Cargo do Discord ao comprar (ID do cargo)</label>
+            <input
+              name="discordRoleId"
+              defaultValue={initial?.discordRoleId ?? ""}
+              className="input"
+              placeholder="ex: 123456789012345678 (opcional)"
+              inputMode="numeric"
+            />
+            <p className="mt-2 text-xs text-ink-400">
+              Ao pagar/receber este produto, o bot dá esse cargo ao comprador no
+              seu servidor. Requer o bot configurado e o cliente logado com Discord.
+            </p>
+          </div>
         </div>
 
         <div className="flex gap-3">
