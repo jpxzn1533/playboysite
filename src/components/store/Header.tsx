@@ -77,7 +77,7 @@ export function Header({
             <img
               src="/logo.webp"
               alt="PlayBoy Store"
-              className="h-11 w-auto transition-transform group-hover:scale-105"
+              className="h-11 w-11 rounded-full object-cover ring-1 ring-white/15 shadow-card transition-transform group-hover:scale-105"
             />
             <span className="sr-only">PlayBoy Store</span>
           </Link>

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, Space_Grotesk, Rubik_Spray_Paint } from "next/font/google";
+import { Inter, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import { ToastProvider } from "@/components/ui/Toast";
 import { CartProvider } from "@/components/cart/CartProvider";
@@ -10,17 +10,9 @@ const inter = Inter({
   display: "swap",
 });
 
-// Kept for numeric/data headings that must stay legible (stat cards, tables).
+// Display font for titles/brand and data headings.
 const spaceGrotesk = Space_Grotesk({
   subsets: ["latin"],
-  variable: "--font-heading",
-  display: "swap",
-});
-
-// Graffiti font used on brand + display titles.
-const graffiti = Rubik_Spray_Paint({
-  subsets: ["latin"],
-  weight: "400",
   variable: "--font-display",
   display: "swap",
 });
@@ -43,7 +35,7 @@ export default function RootLayout({
   return (
     <html
       lang="pt-BR"
-      className={`${inter.variable} ${spaceGrotesk.variable} ${graffiti.variable}`}
+      className={`${inter.variable} ${spaceGrotesk.variable}`}
     >
       <body className="font-sans">
         <ToastProvider>

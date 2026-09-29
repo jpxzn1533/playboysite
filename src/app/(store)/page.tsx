@@ -69,10 +69,12 @@ function Hero({
           </Reveal>
 
           <Reveal delay={80}>
-            <h1 className="mt-6 font-display text-5xl font-bold leading-[1.03] tracking-tight text-white sm:text-7xl">
-              PlayBoy Store
+            <h1 className="mt-6 font-display text-5xl font-bold leading-[1.03] tracking-tight sm:text-7xl">
+              <span className="bg-gradient-to-b from-white to-ink-300 bg-clip-text text-transparent">
+                PlayBoy Store
+              </span>
               <br />
-              <span className="text-ink-400">Produtos para Discord</span>
+              <span className="text-ink-500">Produtos para Discord</span>
             </h1>
           </Reveal>
 
