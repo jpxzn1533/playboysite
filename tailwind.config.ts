@@ -29,7 +29,10 @@ const config: Config = {
       },
       fontFamily: {
         sans: ["var(--font-sans)", "system-ui", "sans-serif"],
-        display: ["var(--font-display)", "system-ui", "sans-serif"],
+        // Graffiti font (brand + big titles).
+        display: ["var(--font-display)", "var(--font-heading)", "cursive"],
+        // Clean geometric font for data/numbers that must stay legible.
+        heading: ["var(--font-heading)", "system-ui", "sans-serif"],
       },
       boxShadow: {
         card: "0 1px 2px rgba(0,0,0,0.4), 0 8px 24px rgba(0,0,0,0.35)",

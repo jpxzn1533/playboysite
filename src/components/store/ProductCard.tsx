@@ -127,7 +127,7 @@ export function ProductCard({ product }: { product: ProductCardData }) {
             {hasVariants && (
               <p className="text-[11px] text-ink-400">A partir de</p>
             )}
-            <p className="font-display text-lg font-bold text-white">
+            <p className="font-heading text-lg font-bold text-white">
               {formatBRL(finalPrice)}
             </p>
           </div>

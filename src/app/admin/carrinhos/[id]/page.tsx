@@ -180,7 +180,7 @@ export default async function CartDetailPage({
               <div className="my-2 h-px bg-white/[0.06]" />
               <div className="flex justify-between text-base font-semibold text-white">
                 <span>Total</span>
-                <span className="font-display text-xl">{formatBRL(total)}</span>
+                <span className="font-heading text-xl">{formatBRL(total)}</span>
               </div>
             </div>
           </div>

@@ -271,7 +271,7 @@ export function CheckoutForm({
           </div>
           <div className="mt-3 flex justify-between text-base font-semibold text-white">
             <span>Total</span>
-            <span className="font-display text-xl">{formatBRL(subtotal)}</span>
+            <span className="font-heading text-xl">{formatBRL(subtotal)}</span>
           </div>
 
           <button

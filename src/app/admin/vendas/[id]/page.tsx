@@ -76,7 +76,7 @@ export default async function SaleDetailPage({
             </div>
             <div className="mt-4 flex items-center justify-between border-t border-white/[0.06] pt-4">
               <span className="text-sm text-ink-400">Total</span>
-              <span className="font-display text-2xl font-bold text-white">
+              <span className="font-heading text-2xl font-bold text-white">
                 {formatBRL(order.total)}
               </span>
             </div>

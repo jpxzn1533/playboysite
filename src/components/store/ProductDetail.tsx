@@ -161,7 +161,7 @@ export function ProductDetail({ product }: { product: DetailProduct }) {
         <p className="mt-3 text-ink-300">{product.shortDescription}</p>
 
         <div className="mt-6 flex items-end gap-3">
-          <span className="font-display text-4xl font-bold text-white">
+          <span className="font-heading text-4xl font-bold text-white">
             {formatBRL(finalPrice)}
           </span>
           {onPromo && (

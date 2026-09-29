@@ -86,7 +86,7 @@ export default async function OpenCartsPage() {
                 <div className="mt-4 flex items-end justify-between border-t border-white/[0.06] pt-4">
                   <div>
                     <p className="text-xs text-ink-400">{qty} item(s)</p>
-                    <p className="font-display text-lg font-bold text-white">
+                    <p className="font-heading text-lg font-bold text-white">
                       {formatBRL(total)}
                     </p>
                   </div>

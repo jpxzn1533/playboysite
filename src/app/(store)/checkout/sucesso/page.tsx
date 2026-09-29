@@ -32,7 +32,7 @@ export default function CheckoutSuccessPage({
             <p className="text-xs uppercase tracking-wide text-ink-400">
               Código do pedido
             </p>
-            <p className="mt-1 font-display text-xl font-bold text-white">
+            <p className="mt-1 font-heading text-xl font-bold text-white">
               {code}
             </p>
           </div>

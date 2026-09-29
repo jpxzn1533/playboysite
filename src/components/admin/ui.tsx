@@ -54,7 +54,7 @@ export function StatCard({
           </span>
         )}
       </div>
-      <p className={`mt-3 font-display text-2xl font-bold sm:text-3xl ${accentClass}`}>
+      <p className={`mt-3 font-heading text-2xl font-bold sm:text-3xl ${accentClass}`}>
         {value}
       </p>
       {hint && <p className="mt-1 text-xs text-ink-400">{hint}</p>}

@@ -132,7 +132,7 @@ export default function CartPage() {
                       <PlusIcon className="h-3.5 w-3.5" />
                     </button>
                   </div>
-                  <span className="font-display font-bold text-white">
+                  <span className="font-heading font-bold text-white">
                     {formatBRL(item.lineTotal)}
                   </span>
                 </div>
@@ -164,7 +164,7 @@ export default function CartPage() {
               <div className="my-2 h-px bg-white/[0.06]" />
               <div className="flex justify-between text-base font-semibold text-white">
                 <span>Total</span>
-                <span className="font-display text-xl">
+                <span className="font-heading text-xl">
                   {formatBRL(subtotal)}
                 </span>
               </div>

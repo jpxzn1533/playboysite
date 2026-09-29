@@ -78,7 +78,7 @@ export default async function OrdersPage() {
               <div className="card p-5 sm:p-6">
                 <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/[0.06] pb-4">
                   <div>
-                    <p className="font-display text-lg font-bold text-white">
+                    <p className="font-heading text-lg font-bold text-white">
                       {order.code}
                     </p>
                     <p className="text-xs text-ink-400">
@@ -118,7 +118,7 @@ export default async function OrdersPage() {
                   <p className="text-sm text-ink-400">
                     {order.deliveryInfo || "Entrega via Discord"}
                   </p>
-                  <p className="font-display text-lg font-bold text-white">
+                  <p className="font-heading text-lg font-bold text-white">
                     {formatBRL(order.total)}
                   </p>
                 </div>
