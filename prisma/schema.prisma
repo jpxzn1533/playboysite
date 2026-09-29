@@ -155,6 +155,7 @@ model Order {
   paymentMethod  String      @default("manual") // manual | pix
   paymentHash    String?     // id da transação no gateway (IronPay)
   pixCode        String?     // PIX copia-e-cola
+  pixAmount      Float?      // valor exato do PIX (com centavos únicos p/ conciliação IMAP)
   paidAt         DateTime?
   paymentClaimedAt DateTime? // cliente informou que pagou (confirmação manual)
   createdAt      DateTime    @default(now())

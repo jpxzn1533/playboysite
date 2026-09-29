@@ -12,7 +12,15 @@ export default async function PixPage({
 }) {
   const order = await prisma.order.findUnique({
     where: { id: params.id },
-    select: { id: true, code: true, pixCode: true, status: true, paymentHash: true },
+    select: {
+      id: true,
+      code: true,
+      pixCode: true,
+      status: true,
+      paymentHash: true,
+      pixAmount: true,
+      total: true,
+    },
   });
 
   if (!order || !order.pixCode) redirect("/pedidos");
@@ -33,6 +41,7 @@ export default async function PixPage({
         pixCode={order.pixCode}
         qrDataUrl={qrDataUrl}
         manualConfirm={manualConfirm}
+        amount={order.pixAmount ?? order.total}
       />
     </div>
   );

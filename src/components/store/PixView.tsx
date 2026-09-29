@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useToast } from "@/components/ui/Toast";
 import { useCart } from "@/components/cart/CartProvider";
+import { formatBRL } from "@/lib/format";
 import { CheckIcon, ArrowRightIcon } from "@/components/ui/icons";
 
 export function PixView({
@@ -12,12 +13,14 @@ export function PixView({
   pixCode,
   qrDataUrl,
   manualConfirm = false,
+  amount,
 }: {
   orderId: string;
   code: string;
   pixCode: string;
   qrDataUrl: string;
   manualConfirm?: boolean;
+  amount?: number;
 }) {
   const { toast } = useToast();
   const { refresh } = useCart();
@@ -118,6 +121,16 @@ export function PixView({
             Pedido <span className="text-ink-200">{code}</span> · aguardando
             pagamento
           </p>
+          {amount != null && (
+            <p className="mt-4 font-heading text-3xl font-bold text-white">
+              {formatBRL(amount)}
+            </p>
+          )}
+          {manualConfirm && (
+            <p className="mt-1 text-xs text-amber-300/90">
+              Pague exatamente este valor (os centavos identificam seu pedido).
+            </p>
+          )}
         </div>
 
         <div className="mx-auto mt-6 w-fit rounded-2xl bg-white p-3">

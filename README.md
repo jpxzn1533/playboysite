@@ -166,7 +166,49 @@ Toda alteração feita no admin (preço, estoque, ativar/desativar) reflete imed
 
 ---
 
-## Pagamento via PIX AUTOMÁTICO (PagBank) — recomendado
+## PIX automático pela Nubank via e-mail (IMAP)
+
+Confirma o pagamento **lendo o e-mail de "PIX recebido"** do banco — sem gateway.
+Use quando quiser receber direto na chave (Nubank) e ainda ter confirmação
+"automática". É mais frágil que um gateway; leia as ressalvas.
+
+Pré-requisitos:
+- **PIX estático ligado** (`PIX_KEY`, `PIX_MERCHANT_NAME`, `PIX_MERCHANT_CITY`) e o
+  PagBank/IronPay **desligados** (o estático precisa ter prioridade).
+- O seu banco precisa **enviar e-mail** quando recebe PIX (confirme na sua caixa).
+
+Como funciona:
+1. Cada pedido recebe um **valor único** (some alguns centavos) — ex.: R$ 27,93 —
+   para dar pra casar o e-mail com 1 pedido só.
+2. Um **cron** chama `/api/cron/pix-imap` a cada 1–2 min; o site lê os e-mails
+   recentes do remetente configurado, extrai o valor e confirma o pedido igual.
+
+Configuração (variáveis de ambiente):
+
+```
+IMAP_HOST=imap.gmail.com          # Gmail; Outlook: outlook.office365.com
+IMAP_PORT=993
+IMAP_USER=seu-email@gmail.com
+IMAP_PASS=senha_de_app            # Gmail: 2FA + "Senha de app" (não a senha normal)
+IMAP_FROM_FILTER=nubank           # só processa e-mails desse remetente
+CRON_SECRET=um_segredo_forte
+```
+
+Agendando o cron (escolha um):
+- **Externo (funciona em qualquer plano):** cadastre em https://cron-job.org uma
+  chamada a `https://SEU-DOMINIO.vercel.app/api/cron/pix-imap?key=CRON_SECRET`
+  a cada 1–2 minutos.
+- **Vercel Cron (plano Pro):** adicione um `vercel.json` com
+  `{"crons":[{"path":"/api/cron/pix-imap","schedule":"*/2 * * * *"}]}` (no Hobby o
+  cron roda só 1x/dia, por isso o externo é melhor).
+
+> ⚠️ Ressalvas: depende do banco enviar o e-mail; se o layout do e-mail mudar, a
+> leitura pode quebrar; e a confirmação não é instantânea (depende do intervalo do
+> cron). Para algo à prova de falhas, use o **PagBank** (abaixo).
+
+---
+
+## Pagamento via PIX AUTOMÁTICO (PagBank) — mais confiável
 
 Confirmação **automática**: o PagBank gera o PIX, detecta o pagamento e avisa o
 site por **webhook**. O pedido é confirmado sozinho e, se for tudo entregável, a

@@ -173,11 +173,34 @@ export async function POST(req: Request) {
   });
 
   // Static PIX (direct key / Nubank): generate the copy-and-paste code locally.
+  // Assign a UNIQUE amount (base + a few cents) so IMAP reconciliation can match
+  // an incoming payment to exactly one pending order.
   if (wantsPix && staticPix) {
-    const code = buildStaticPix({ amountBRL: total, txid: order.code });
+    const pending = await prisma.order.findMany({
+      where: {
+        status: "AWAITING_PAYMENT",
+        paymentMethod: "pix",
+        pixAmount: { not: null },
+      },
+      select: { pixAmount: true },
+    });
+    const used = new Set(
+      pending.map((o) => Math.round((o.pixAmount as number) * 100))
+    );
+    const baseCents = Math.round(total * 100);
+    let chosen = baseCents;
+    for (let off = 0; off < 100; off++) {
+      if (!used.has(baseCents + off)) {
+        chosen = baseCents + off;
+        break;
+      }
+    }
+    const pixAmount = chosen / 100;
+
+    const code = buildStaticPix({ amountBRL: pixAmount, txid: order.code });
     await prisma.order.update({
       where: { id: order.id },
-      data: { pixCode: code },
+      data: { pixCode: code, pixAmount },
     });
     return NextResponse.json({
       ok: true,
