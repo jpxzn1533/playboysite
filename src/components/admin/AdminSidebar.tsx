@@ -19,15 +19,42 @@ import {
 
 type Badges = { carts: number; orders: number; chats: number };
 
-const NAV = [
-  { href: "/admin", label: "Dashboard", icon: ChartIcon, exact: true },
-  { href: "/admin/produtos", label: "Produtos", icon: BoxIcon },
-  { href: "/admin/estoque", label: "Estoque", icon: LayersIcon },
-  { href: "/admin/carrinhos", label: "Carrinhos abertos", icon: CartIcon, badge: "carts" as const },
-  { href: "/admin/entregas-manuais", label: "Entregas manuais", icon: ChatIcon, badge: "chats" as const },
-  { href: "/admin/vendas", label: "Vendas", icon: TagIcon, badge: "orders" as const },
-  { href: "/admin/clientes", label: "Clientes", icon: UsersIcon },
-  { href: "/admin/logs", label: "Logs", icon: ClipboardIcon },
+const GROUPS: {
+  label: string | null;
+  items: {
+    href: string;
+    label: string;
+    icon: typeof ChartIcon;
+    exact?: boolean;
+    badge?: "carts" | "orders" | "chats";
+  }[];
+}[] = [
+  {
+    label: null,
+    items: [{ href: "/admin", label: "Dashboard", icon: ChartIcon, exact: true }],
+  },
+  {
+    label: "Catálogo",
+    items: [
+      { href: "/admin/produtos", label: "Produtos", icon: BoxIcon },
+      { href: "/admin/estoque", label: "Estoque", icon: LayersIcon },
+    ],
+  },
+  {
+    label: "Vendas",
+    items: [
+      { href: "/admin/carrinhos", label: "Carrinhos abertos", icon: CartIcon, badge: "carts" },
+      { href: "/admin/entregas-manuais", label: "Entregas manuais", icon: ChatIcon, badge: "chats" },
+      { href: "/admin/vendas", label: "Vendas", icon: TagIcon, badge: "orders" },
+    ],
+  },
+  {
+    label: "Pessoas & sistema",
+    items: [
+      { href: "/admin/clientes", label: "Clientes", icon: UsersIcon },
+      { href: "/admin/logs", label: "Logs", icon: ClipboardIcon },
+    ],
+  },
 ];
 
 export function AdminSidebar({
@@ -48,34 +75,43 @@ export function AdminSidebar({
   }
 
   const nav = (
-    <nav className="flex flex-1 flex-col gap-1 px-3">
-      {NAV.map((item) => {
-        const active = item.exact
-          ? pathname === item.href
-          : pathname.startsWith(item.href);
-        const count = item.badge ? badges[item.badge] : 0;
-        return (
-          <Link
-            key={item.href}
-            href={item.href}
-            onClick={() => setOpen(false)}
-            className={
-              "group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-colors " +
-              (active
-                ? "bg-white/10 text-white"
-                : "text-ink-300 hover:bg-white/5 hover:text-white")
-            }
-          >
-            <item.icon className="h-4.5 w-4.5" />
-            <span className="flex-1">{item.label}</span>
-            {item.badge && count > 0 && (
-              <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-white px-1.5 text-[11px] font-bold text-ink-950">
-                {count}
-              </span>
-            )}
-          </Link>
-        );
-      })}
+    <nav className="flex flex-1 flex-col gap-4 px-3">
+      {GROUPS.map((group, gi) => (
+        <div key={gi} className="flex flex-col gap-1">
+          {group.label && (
+            <p className="px-3 pb-1 pt-1 text-[10px] font-semibold uppercase tracking-wider text-ink-500">
+              {group.label}
+            </p>
+          )}
+          {group.items.map((item) => {
+            const active = item.exact
+              ? pathname === item.href
+              : pathname.startsWith(item.href);
+            const count = item.badge ? badges[item.badge] : 0;
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                onClick={() => setOpen(false)}
+                className={
+                  "group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-colors " +
+                  (active
+                    ? "bg-white/10 text-white"
+                    : "text-ink-300 hover:bg-white/5 hover:text-white")
+                }
+              >
+                <item.icon className="h-4.5 w-4.5" />
+                <span className="flex-1">{item.label}</span>
+                {item.badge && count > 0 && (
+                  <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-white px-1.5 text-[11px] font-bold text-ink-950">
+                    {count}
+                  </span>
+                )}
+              </Link>
+            );
+          })}
+        </div>
+      ))}
     </nav>
   );
 
