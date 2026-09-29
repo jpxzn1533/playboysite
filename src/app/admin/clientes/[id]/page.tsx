@@ -9,6 +9,7 @@ import {
   StatCard,
 } from "@/components/admin/ui";
 import { StatusBadge } from "@/components/store/StatusBadge";
+import { Avatar } from "@/components/ui/Avatar";
 import { DiscordIcon } from "@/components/ui/icons";
 
 export const dynamic = "force-dynamic";
@@ -40,9 +41,7 @@ export default async function CustomerDetailPage({
       <BackLink href="/admin/clientes" label="Voltar para clientes" />
 
       <div className="mb-8 flex items-center gap-4">
-        <span className="flex h-16 w-16 items-center justify-center rounded-2xl bg-ink-700 text-2xl font-semibold text-white">
-          {user.name.charAt(0).toUpperCase()}
-        </span>
+        <Avatar src={user.avatarUrl} name={user.name} className="h-16 w-16" />
         <div>
           <h1 className="font-display text-2xl font-bold text-white">
             {user.name}

@@ -5,7 +5,8 @@ import { prisma } from "@/lib/prisma";
 import { formatBRL, formatDateTime, orderStatusLabel } from "@/lib/format";
 import { StatusBadge } from "@/components/store/StatusBadge";
 import { Reveal } from "@/components/ui/Reveal";
-import { ClipboardIcon, ArrowRightIcon } from "@/components/ui/icons";
+import { Avatar } from "@/components/ui/Avatar";
+import { ClipboardIcon, ArrowRightIcon, DiscordIcon } from "@/components/ui/icons";
 
 export const metadata: Metadata = { title: "Meus pedidos" };
 export const dynamic = "force-dynamic";
@@ -45,9 +46,17 @@ export default async function OrdersPage() {
 
   return (
     <div className="container-pb py-10 sm:py-14">
-      <div className="mb-8">
-        <p className="kicker">Olá, {user.name.split(" ")[0]}</p>
-        <h1 className="section-title mt-1.5">Meus pedidos</h1>
+      <div className="mb-8 flex items-center gap-4">
+        <Avatar src={user.avatarUrl} name={user.name} className="h-14 w-14" />
+        <div>
+          <p className="kicker">Olá, {user.name.split(" ")[0]}</p>
+          <h1 className="section-title mt-1.5">Meus pedidos</h1>
+          {user.discordName && (
+            <p className="mt-1 flex items-center gap-1.5 text-xs text-ink-400">
+              <DiscordIcon className="h-3.5 w-3.5" /> {user.discordName}
+            </p>
+          )}
+        </div>
       </div>
 
       {orders.length === 0 ? (

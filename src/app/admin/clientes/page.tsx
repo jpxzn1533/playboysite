@@ -2,6 +2,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { formatBRL, formatDate, relativeTime } from "@/lib/format";
 import { AdminContainer, PageHeader, EmptyState } from "@/components/admin/ui";
+import { Avatar } from "@/components/ui/Avatar";
 import { DiscordIcon } from "@/components/ui/icons";
 
 export const dynamic = "force-dynamic";
@@ -58,9 +59,7 @@ export default async function CustomersPage() {
                           href={`/admin/clientes/${u.id}`}
                           className="flex items-center gap-3"
                         >
-                          <span className="flex h-9 w-9 items-center justify-center rounded-full bg-ink-700 text-xs font-semibold text-white">
-                            {u.name.charAt(0).toUpperCase()}
-                          </span>
+                          <Avatar src={u.avatarUrl} name={u.name} className="h-9 w-9" />
                           <div>
                             <p className="font-medium text-white hover:underline">
                               {u.name}

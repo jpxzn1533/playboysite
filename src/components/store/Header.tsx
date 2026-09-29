@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useCart } from "@/components/cart/CartProvider";
+import { Avatar } from "@/components/ui/Avatar";
 import {
   CartIcon,
   UserIcon,
@@ -17,6 +18,8 @@ type SessionUser = {
   id: string;
   name: string;
   role: string;
+  avatarUrl?: string | null;
+  discordName?: string | null;
 } | null;
 
 const NAV = [
@@ -126,9 +129,7 @@ export function Header({
                 onClick={() => setMenuOpen((v) => !v)}
                 className="flex h-10 items-center gap-2 rounded-xl px-2.5 text-ink-200 transition-colors hover:bg-white/5 hover:text-white"
               >
-                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-ink-700 text-xs font-semibold text-white">
-                  {user.name.charAt(0).toUpperCase()}
-                </span>
+                <Avatar src={user.avatarUrl} name={user.name} className="h-7 w-7" />
                 <span className="hidden max-w-[9rem] truncate text-sm sm:block">
                   {user.name.split(" ")[0]}
                 </span>
@@ -139,14 +140,27 @@ export function Header({
                     className="fixed inset-0 z-40"
                     onClick={() => setMenuOpen(false)}
                   />
-                  <div className="absolute right-0 top-12 z-50 w-56 overflow-hidden rounded-xl border border-white/10 bg-ink-850 p-1.5 shadow-glow animate-scale-in">
-                    <div className="px-3 py-2">
-                      <p className="truncate text-sm font-medium text-white">
-                        {user.name}
-                      </p>
-                      <p className="text-xs text-ink-400">
-                        {user.role === "ADMIN" ? "Administrador" : "Cliente"}
-                      </p>
+                  <div className="absolute right-0 top-12 z-50 w-64 overflow-hidden rounded-xl border border-white/10 bg-ink-850 p-1.5 shadow-glow animate-scale-in">
+                    <div className="flex items-center gap-3 px-3 py-3">
+                      <Avatar
+                        src={user.avatarUrl}
+                        name={user.name}
+                        className="h-10 w-10"
+                      />
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-medium text-white">
+                          {user.name}
+                        </p>
+                        {user.discordName ? (
+                          <p className="flex items-center gap-1 truncate text-xs text-ink-400">
+                            <DiscordIcon className="h-3 w-3" /> {user.discordName}
+                          </p>
+                        ) : (
+                          <p className="text-xs text-ink-400">
+                            {user.role === "ADMIN" ? "Administrador" : "Cliente"}
+                          </p>
+                        )}
+                      </div>
                     </div>
                     <div className="my-1 h-px bg-white/5" />
                     <Link

@@ -126,8 +126,12 @@ export async function fetchProfile(
 
   // Discord
   const discordName = raw.global_name || raw.username || "Usuário Discord";
+  // Animated avatars (Nitro) have a hash starting with "a_" and use .gif.
+  const animated = typeof raw.avatar === "string" && raw.avatar.startsWith("a_");
   const avatarUrl = raw.avatar
-    ? `https://cdn.discordapp.com/avatars/${raw.id}/${raw.avatar}.png`
+    ? `https://cdn.discordapp.com/avatars/${raw.id}/${raw.avatar}.${
+        animated ? "gif" : "png"
+      }?size=128`
     : null;
   return {
     providerId: String(raw.id),

@@ -73,6 +73,7 @@ export async function getCurrentUser() {
       role: true,
       discordName: true,
       discordId: true,
+      avatarUrl: true,
       createdAt: true,
     },
   });

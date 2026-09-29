@@ -12,7 +12,13 @@ export default async function StoreLayout({
 }) {
   const current = await getCurrentUser();
   const user = current
-    ? { id: current.id, name: current.name, role: current.role }
+    ? {
+        id: current.id,
+        name: current.name,
+        role: current.role,
+        avatarUrl: current.avatarUrl ?? null,
+        discordName: current.discordName ?? null,
+      }
     : null;
 
   return (
