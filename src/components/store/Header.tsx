@@ -61,24 +61,26 @@ export function Header({
   }
 
   return (
-    <header
-      className={
-        "sticky top-0 z-50 transition-all duration-300 " +
-        (scrolled
-          ? "border-b border-white/[0.06] bg-ink-950/85 backdrop-blur-xl"
-          : "border-b border-transparent bg-transparent")
-      }
-    >
-      <div className="container-pb flex h-16 items-center justify-between gap-4">
-        {/* Logo */}
-        <Link href="/" className="group flex items-center gap-2.5">
-          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-white text-ink-950 font-display text-lg font-bold shadow-[0_4px_20px_rgba(255,255,255,0.15)] transition-transform group-hover:scale-105">
-            P
-          </span>
-          <span className="font-display text-lg font-bold tracking-tight text-white">
-            PlayBoy<span className="text-ink-400"> Store</span>
-          </span>
-        </Link>
+    <header className="sticky top-0 z-50">
+      <div className="container-pb px-4 pt-3 sm:pt-4">
+        <div
+          className={
+            "flex h-16 items-center justify-between gap-4 rounded-2xl border px-4 backdrop-blur-xl transition-all duration-300 sm:px-6 " +
+            (scrolled
+              ? "border-white/10 bg-ink-900/80 shadow-glow"
+              : "border-white/[0.06] bg-ink-900/50 shadow-card")
+          }
+        >
+          {/* Logo */}
+          <Link href="/" className="group flex items-center gap-2.5">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/logo.webp"
+              alt="PlayBoy Store"
+              className="h-11 w-auto transition-transform group-hover:scale-105"
+            />
+            <span className="sr-only">PlayBoy Store</span>
+          </Link>
 
         {/* Desktop nav */}
         <nav className="hidden items-center gap-1 md:flex">
@@ -216,13 +218,14 @@ export function Header({
               <MenuIcon className="h-5 w-5" />
             )}
           </button>
+          </div>
         </div>
       </div>
 
       {/* Mobile menu */}
       {mobileOpen && (
-        <div className="border-t border-white/[0.06] bg-ink-950/95 backdrop-blur-xl md:hidden animate-fade-in">
-          <nav className="container-pb flex flex-col gap-1 py-3">
+        <div className="container-pb px-4 md:hidden">
+          <nav className="mt-2 flex flex-col gap-1 rounded-2xl border border-white/10 bg-ink-900/90 p-3 shadow-glow backdrop-blur-xl animate-fade-in">
             {NAV.map((item) => (
               <Link
                 key={item.href}
