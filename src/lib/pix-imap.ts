@@ -117,11 +117,22 @@ export async function checkInboxAndConfirm(): Promise<Result> {
     try {
       await client.logout();
     } catch {}
+    // Surface the real IMAP reason (imapflow hides it behind "Command failed").
+    const detail =
+      err?.responseText ||
+      err?.response ||
+      err?.serverResponseCode ||
+      err?.code ||
+      err?.message ||
+      String(err);
+    const auth = err?.authenticationFailed
+      ? " — FALHA DE AUTENTICAÇÃO: verifique IMAP_USER e use a SENHA DE APP em IMAP_PASS (não a senha normal); e confirme que o IMAP está ativado no e-mail."
+      : "";
     return {
       ok: false,
       checked,
       matched,
-      error: err?.message ?? "Falha ao acessar o e-mail (IMAP).",
+      error: `${detail}${auth}`,
     };
   }
 }
