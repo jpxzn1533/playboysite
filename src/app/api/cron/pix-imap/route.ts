@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { checkInboxAndConfirm } from "@/lib/pix-imap";
+import { checkInboxAndConfirm, listRecentEmails } from "@/lib/pix-imap";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -21,6 +21,13 @@ export async function GET(req: Request) {
     if (key !== secret) {
       return NextResponse.json({ error: "unauthorized" }, { status: 401 });
     }
+  }
+
+  // Diagnostic mode: ?debug=1 lists recent emails + detected values.
+  const url = new URL(req.url);
+  if (url.searchParams.get("debug") === "1") {
+    const hours = Number(url.searchParams.get("hours") || 6);
+    return NextResponse.json(await listRecentEmails(hours));
   }
 
   const result = await checkInboxAndConfirm();

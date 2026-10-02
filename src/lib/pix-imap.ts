@@ -32,6 +32,62 @@ type Result = {
 };
 
 /**
+ * Diagnostic: lists recent emails (any sender) with the detected money values,
+ * so we can confirm whether the bank actually emails and how it formats values.
+ * Does NOT confirm anything. Shows from/subject/date only (not the body).
+ */
+export async function listRecentEmails(hours = 6): Promise<{
+  ok: boolean;
+  emails?: { from: string; subject: string; date: string; values: number[] }[];
+  error?: string;
+}> {
+  if (!isImapConfigured()) {
+    return { ok: false, error: "IMAP não configurado." };
+  }
+  const client = new ImapFlow({
+    host: process.env.IMAP_HOST!,
+    port: Number(process.env.IMAP_PORT || 993),
+    secure: true,
+    auth: { user: process.env.IMAP_USER!, pass: process.env.IMAP_PASS! },
+    logger: false,
+  });
+  const emails: { from: string; subject: string; date: string; values: number[] }[] = [];
+  try {
+    await client.connect();
+    const lock = await client.getMailboxLock("INBOX");
+    try {
+      const since = new Date(Date.now() - hours * 3600 * 1000);
+      const uids = (await client.search({ since }, { uid: true })) || [];
+      for await (const msg of client.fetch(
+        uids.slice(-40),
+        { source: true, envelope: true },
+        { uid: true }
+      )) {
+        const parsed = await simpleParser(msg.source as Buffer);
+        const subject = msg.envelope?.subject || "";
+        emails.push({
+          from: msg.envelope?.from?.[0]?.address || "",
+          subject,
+          date: (msg.envelope?.date || new Date()).toString(),
+          values: extractValues(`${subject}\n${parsed.text || ""}`),
+        });
+      }
+    } finally {
+      lock.release();
+    }
+    await client.logout();
+    return { ok: true, emails };
+  } catch (err: any) {
+    try {
+      await client.logout();
+    } catch {}
+    const detail =
+      err?.responseText || err?.code || err?.message || String(err);
+    return { ok: false, error: String(detail) };
+  }
+}
+
+/**
  * Connects to the inbox, reads recent messages from Nubank, and confirms any
  * pending PIX order whose unique amount matches a value in the email.
  * Idempotent: paid orders leave AWAITING_PAYMENT so re-reads won't double-confirm.
