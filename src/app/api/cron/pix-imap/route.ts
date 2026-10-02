@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { checkInboxAndConfirm, listRecentEmails } from "@/lib/pix-imap";
+import { diagnoseOrder } from "@/lib/diagnose";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -23,8 +24,15 @@ export async function GET(req: Request) {
     }
   }
 
-  // Diagnostic mode: ?debug=1 lists recent emails + detected values.
   const url = new URL(req.url);
+
+  // Diagnose a specific order: ?order=PB-XXXX
+  const orderCode = url.searchParams.get("order");
+  if (orderCode) {
+    return NextResponse.json(await diagnoseOrder(orderCode));
+  }
+
+  // Diagnostic mode: ?debug=1 lists recent emails + detected values.
   if (url.searchParams.get("debug") === "1") {
     const hours = Number(url.searchParams.get("hours") || 6);
     return NextResponse.json(await listRecentEmails(hours));
