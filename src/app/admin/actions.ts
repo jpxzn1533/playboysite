@@ -6,7 +6,7 @@ import { requireAdmin } from "@/lib/auth";
 import { logAdminAction, generateOrderCode } from "@/lib/log";
 import { slugify } from "@/lib/format";
 import { syncStock, consumeDeliverables, isManaged } from "@/lib/stock";
-import { fulfillOrder } from "@/lib/fulfill";
+import { fulfillOrder, markOrderPaid } from "@/lib/fulfill";
 import { grantRolesForOrder } from "@/lib/discord";
 
 type ActionResult = { ok: boolean; error?: string; id?: string; code?: string };
@@ -827,6 +827,10 @@ export async function updateOrderStatus(
 
   if (status === "DELIVERED") {
     await fulfillOrder(orderId, admin.userId, false);
+  } else if (status === "PAID") {
+    // Confirming payment runs the same automation as the webhook/IMAP:
+    // auto-delivers deliverable-only orders and grants Discord roles.
+    await markOrderPaid(orderId);
   } else if (status === "CANCELLED") {
     await prisma.$transaction(async (tx) => {
       // Release reserved stock if it was reserving.
