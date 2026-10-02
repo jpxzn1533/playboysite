@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { formatBRL, formatDateTime, relativeTime } from "@/lib/format";
+import { productAvailable } from "@/lib/variants";
 import {
   AdminContainer,
   AdminCard,
@@ -51,7 +52,7 @@ export default async function AdminDashboard() {
       orderBy: { createdAt: "desc" },
       take: 6,
     }),
-    prisma.product.findMany(),
+    prisma.product.findMany({ include: { variants: true } }),
     prisma.cart.count({ where: { status: "OPEN" } }),
     prisma.order.count({
       where: { status: { in: ["AWAITING_PAYMENT", "PAID", "PREPARING"] } },
@@ -76,9 +77,9 @@ export default async function AdminDashboard() {
     .reduce((s, o) => s + o.total, 0);
   const salesCount = allRevenueOrders.length;
 
-  const outOfStock = products.filter((p) => p.stock <= 0).length;
+  const outOfStock = products.filter((p) => productAvailable(p) <= 0).length;
   const lowStock = products.filter(
-    (p) => p.stock > 0 && p.stock <= p.lowStockThreshold
+    (p) => productAvailable(p) > 0 && productAvailable(p) <= p.lowStockThreshold
   ).length;
 
   // Build 14-day series.

@@ -2,7 +2,12 @@ import Link from "next/link";
 import Image from "next/image";
 import { prisma } from "@/lib/prisma";
 import { formatBRL } from "@/lib/format";
-import { productStock, productFromPrice, hasVariants } from "@/lib/variants";
+import {
+  productAvailable,
+  productReserved,
+  productFromPrice,
+  hasVariants,
+} from "@/lib/variants";
 import {
   AdminContainer,
   PageHeader,
@@ -54,18 +59,19 @@ export default async function AdminProductsPage() {
                   <th className="px-4 py-3 font-medium">Produto</th>
                   <th className="px-4 py-3 font-medium">Categoria</th>
                   <th className="px-4 py-3 font-medium">Preço</th>
-                  <th className="px-4 py-3 font-medium">Estoque</th>
+                  <th className="px-4 py-3 font-medium">Disponível</th>
                   <th className="px-4 py-3 font-medium">Vendas</th>
                   <th className="px-4 py-3 text-right font-medium">Ações</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/[0.04]">
                 {products.map((p) => {
-                  const totalStock = productStock(p);
+                  const avail = productAvailable(p);
+                  const reserved = productReserved(p);
                   const fromPrice = productFromPrice(p);
                   const withVariants = hasVariants(p);
-                  const soldOut = totalStock <= 0;
-                  const low = !soldOut && totalStock <= p.lowStockThreshold;
+                  const soldOut = avail <= 0;
+                  const low = !soldOut && avail <= p.lowStockThreshold;
                   return (
                     <tr key={p.id} className="transition-colors hover:bg-white/[0.02]">
                       <td className="px-4 py-3">
@@ -128,11 +134,16 @@ export default async function AdminProductsPage() {
                                 : "text-ink-200"
                           }
                         >
-                          {totalStock}
+                          {avail}
                         </span>
+                        {reserved > 0 && (
+                          <span className="ml-1 text-[10px] text-amber-300/80">
+                            ({reserved} reserv.)
+                          </span>
+                        )}
                         {withVariants && (
                           <span className="ml-1 text-[10px] text-ink-500">
-                            ({p.variants.length}v)
+                            · {p.variants.length}v
                           </span>
                         )}
                       </td>

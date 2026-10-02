@@ -31,7 +31,9 @@ async function serializeCart(cartId: string) {
       image: i.product!.images[0]?.url ?? null,
       unitPrice: i.unitPrice,
       quantity: i.quantity,
-      stock: i.variant ? i.variant.stock : i.product!.stock,
+      stock: i.variant
+        ? Math.max(0, i.variant.stock - i.variant.reserved)
+        : Math.max(0, i.product!.stock - i.product!.reserved),
       lineTotal: i.unitPrice * i.quantity,
     }));
 
@@ -81,10 +83,10 @@ export async function POST(req: Request) {
       );
     }
     unitPrice = effectivePrice(variant);
-    availableStock = variant.stock;
+    availableStock = Math.max(0, variant.stock - variant.reserved);
   } else {
     unitPrice = effectivePrice(product);
-    availableStock = product.stock;
+    availableStock = Math.max(0, product.stock - product.reserved);
   }
 
   if (availableStock <= 0) {
@@ -143,8 +145,8 @@ export async function PATCH(req: Request) {
     await prisma.cartItem.delete({ where: { id: existing.id } });
   } else {
     const stock = existing.variant
-      ? existing.variant.stock
-      : existing.product?.stock ?? 0;
+      ? Math.max(0, existing.variant.stock - existing.variant.reserved)
+      : Math.max(0, (existing.product?.stock ?? 0) - (existing.product?.reserved ?? 0));
     if (quantity > stock) {
       return NextResponse.json(
         { error: `Apenas ${stock} unidade(s) em estoque.` },

@@ -1,12 +1,13 @@
 import "server-only";
 import { prisma } from "./prisma";
 import type { ProductCardData } from "./types";
-import { productStock, productFromPrice, hasVariants } from "./variants";
+import { productAvailable, productFromPrice, hasVariants } from "./variants";
 
 type RawVariant = {
   price: number;
   promoPrice: number | null;
   stock: number;
+  reserved: number;
   active: boolean;
 };
 
@@ -18,6 +19,7 @@ type RawProduct = {
   price: number;
   promoPrice: number | null;
   stock: number;
+  reserved: number;
   featured: boolean;
   bestSeller: boolean;
   soldCount: number;
@@ -34,7 +36,7 @@ export function toCardData(p: RawProduct): ProductCardData {
     shortDescription: p.shortDescription,
     price: p.price,
     promoPrice: p.promoPrice,
-    stock: productStock(p),
+    stock: productAvailable(p),
     fromPrice: productFromPrice(p),
     hasVariants: hasVariants(p),
     featured: p.featured,
@@ -50,7 +52,13 @@ const cardInclude = {
   images: { orderBy: { position: "asc" as const }, take: 1 },
   variants: {
     where: { active: true },
-    select: { price: true, promoPrice: true, stock: true, active: true },
+    select: {
+      price: true,
+      promoPrice: true,
+      stock: true,
+      reserved: true,
+      active: true,
+    },
   },
 };
 
@@ -132,8 +140,6 @@ export async function getCatalogProducts(filters: CatalogFilters) {
   if (filters.category) {
     where.category = { slug: filters.category };
   }
-  if (filters.availability === "in") where.stock = { gt: 0 };
-  if (filters.availability === "out") where.stock = { lte: 0 };
 
   let orderBy: any = { createdAt: "desc" };
   if (filters.sort === "best") orderBy = { soldCount: "desc" };
@@ -146,12 +152,17 @@ export async function getCatalogProducts(filters: CatalogFilters) {
     orderBy,
   });
 
-  // Price filter uses the effective price, applied in-app for accuracy with promos.
+  // Filters applied in-app for accuracy (effective price + availability net of reserved).
   const min = filters.min ?? 0;
   const max = filters.max ?? Number.POSITIVE_INFINITY;
   const mapped = products
     .map(toCardData)
-    .filter((p) => p.fromPrice >= min && p.fromPrice <= max);
+    .filter((p) => p.fromPrice >= min && p.fromPrice <= max)
+    .filter((p) => {
+      if (filters.availability === "in") return p.stock > 0;
+      if (filters.availability === "out") return p.stock <= 0;
+      return true;
+    });
 
   return mapped;
 }

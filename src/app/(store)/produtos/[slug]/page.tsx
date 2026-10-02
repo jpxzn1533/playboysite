@@ -58,7 +58,8 @@ export default async function ProductPage({
             shortDescription: product.shortDescription,
             price: product.price,
             promoPrice: product.promoPrice,
-            stock: product.stock,
+            // Available = stock − reserved (so it reflects open orders).
+            stock: Math.max(0, product.stock - product.reserved),
             soldCount: product.soldCount,
             categoryName: product.category?.name ?? null,
             images: product.images.map((i) => i.url),
@@ -67,7 +68,7 @@ export default async function ProductPage({
               name: v.name,
               price: v.price,
               promoPrice: v.promoPrice,
-              stock: v.stock,
+              stock: Math.max(0, v.stock - v.reserved),
             })),
           }}
         />
