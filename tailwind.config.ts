@@ -33,6 +33,8 @@ const config: Config = {
         display: ["var(--font-display)", "var(--font-heading)", "cursive"],
         // Clean geometric font for data/numbers that must stay legible.
         heading: ["var(--font-heading)", "system-ui", "sans-serif"],
+        // Graffiti "tag" font — used only on the home hero title.
+        tag: ["var(--font-tag)", "cursive"],
       },
       boxShadow: {
         card: "0 1px 2px rgba(0,0,0,0.4), 0 8px 24px rgba(0,0,0,0.35)",

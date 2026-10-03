@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter, Space_Grotesk } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 import { ToastProvider } from "@/components/ui/Toast";
 import { CartProvider } from "@/components/cart/CartProvider";
@@ -14,6 +15,13 @@ const inter = Inter({
 const spaceGrotesk = Space_Grotesk({
   subsets: ["latin"],
   variable: "--font-display",
+  display: "swap",
+});
+
+// Graffiti "tag" font used ONLY on the home hero title.
+const anotherTag = localFont({
+  src: "./fonts/aAnotherTag.ttf",
+  variable: "--font-tag",
   display: "swap",
 });
 
@@ -35,7 +43,7 @@ export default function RootLayout({
   return (
     <html
       lang="pt-BR"
-      className={`${inter.variable} ${spaceGrotesk.variable}`}
+      className={`${inter.variable} ${spaceGrotesk.variable} ${anotherTag.variable}`}
     >
       <body className="font-sans">
         <ToastProvider>
